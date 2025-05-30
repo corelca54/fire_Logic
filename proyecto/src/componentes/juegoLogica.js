@@ -1,53 +1,58 @@
 // src/componentes/juegoLogica.js
+import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 
-// Banco de preguntas de Lógica y Acertijos (ejemplos)
 const PREGUNTAS_LOGICA = [
+    { id: "log1", tipo: "acertijo_texto", pregunta: "Tiene ciudades, pero no casas. Tiene montañas, pero no árboles. Tiene agua, pero no peces. ¿Qué es?", respuesta: "un mapa", pista: "Es algo que usas para orientarte.", dificultad: "media" },
+    { id: "log2", tipo: "secuencia_numerica", pregunta: "Continúa la secuencia: 2, 4, 8, 16, ___", respuesta: "32", pista: "Cada número es el doble del anterior.", dificultad: "facil" },
+    { id: "log3", tipo: "logica_deductiva", pregunta: "Si todos los Zigs son Zags y algunos Zags son Zoogs, ¿podemos asegurar que algunos Zigs son Zoogs? (sí/no)", respuesta: "no", pista: "Piensa en conjuntos.", dificultad: "dificil" },
+    { id: "log4", tipo: "acertijo_texto", pregunta: "Soy alto cuando soy joven y corto cuando soy viejo. ¿Qué soy?", respuesta: "una vela", pista: "Me encienden.", dificultad: "media" }
+    // ... (preguntas existentes) ...
     {
-        id: "log1",
-        tipo: "acertijo_texto",
-        pregunta: "Tiene ciudades, pero no casas. Tiene montañas, pero no árboles. Tiene agua, pero no peces. ¿Qué es?",
-        respuesta: "un mapa", // Aceptaremos respuestas en minúsculas y sin tildes para simplificar
-        pista: "Es algo que usas para orientarte en un viaje.",
+        id: "log5",
+        tipo: "acertijo_matematico",
+        pregunta: "Un granjero tiene 17 ovejas. Todas menos nueve murieron. ¿Cuántas ovejas vivas le quedan?",
+        respuesta: "9",
+        pista: "Lee la pregunta con atención: 'Todas menos nueve...'",
         dificultad: "media"
     },
     {
-        id: "log2",
-        tipo: "secuencia_numerica",
-        pregunta: "Continúa la secuencia: 2, 4, 8, 16, ___",
-        respuesta: "32",
-        pista: "Cada número es el doble del anterior.",
-        dificultad: "facil"
+        id: "log6",
+        tipo: "logica_programacion_conceptual",
+        pregunta: "Si tienes una lista de números y quieres encontrar el más grande, ¿qué harías primero con el primer número de la lista?",
+        respuesta: "asumir que es el mas grande", // O "guardarlo como el mayor actual", "tomarlo como referencia"
+        pista: "Necesitas un punto de partida para comparar.",
+        dificultad: "media"
     },
     {
-        id: "log3",
-        tipo: "logica_deductiva",
-        pregunta: "Si todos los Zigs son Zags y algunos Zags son Zoogs, ¿podemos asegurar que algunos Zigs son Zoogs? (Responde sí o no)",
-        respuesta: "no",
-        pista: "Piensa en conjuntos. Que algunos Zags sean Zoogs no implica que los Zigs que son Zags también sean Zoogs.",
+        id: "log7",
+        tipo: "secuencia_letras",
+        pregunta: "Continúa la secuencia: A, C, F, J, O, ___",
+        respuesta: "u",
+        pista: "La distancia entre las letras aumenta: +2, +3, +4, +5...",
         dificultad: "dificil"
     },
     {
-        id: "log4",
-        tipo: "acertijo_texto",
-        pregunta: "Soy alto cuando soy joven y corto cuando soy viejo. ¿Qué soy?",
-        respuesta: "una vela",
-        pista: "Me encienden y me consumo con el tiempo.",
-        dificultad: "media"
+        id: "log8",
+        tipo: "acertijo_clasico",
+        pregunta: "¿Qué tiene un ojo pero no puede ver?",
+        respuesta: "una aguja",
+        pista: "Se usa para coser.",
+        dificultad: "facil"
     }
+    // ... ¡Añade muchas más! ...
 ];
 
 let preguntaActualLogica = null;
-let puntajeLogica = 0;
-let preguntasLogicaUsadas = []; // Para no repetir preguntas en una sesión
+let puntajeLogica = 0; // << DECLARADA AQUÍ A NIVEL DE MÓDULO
+let preguntasLogicaUsadas = [];
 
 function obtenerNuevaPreguntaLogica() {
     let preguntasDisponibles = PREGUNTAS_LOGICA.filter(p => !preguntasLogicaUsadas.includes(p.id));
     if (preguntasDisponibles.length === 0) {
-        // Si se acaban las preguntas, reiniciamos las usadas para poder jugar de nuevo
-        // En una app más grande, cargarías más o indicarías que no hay más.
         preguntasLogicaUsadas = [];
         preguntasDisponibles = PREGUNTAS_LOGICA;
-        if (preguntasDisponibles.length === 0) return null; // No hay preguntas en absoluto
+        if (preguntasDisponibles.length === 0) return null;
     }
     const indiceAleatorio = Math.floor(Math.random() * preguntasDisponibles.length);
     const nuevaPregunta = preguntasDisponibles[indiceAleatorio];
@@ -57,56 +62,43 @@ function obtenerNuevaPreguntaLogica() {
 
 function mostrarPreguntaLogica(container, navigateTo) {
     preguntaActualLogica = obtenerNuevaPreguntaLogica();
-
     if (!preguntaActualLogica) {
-        container.innerHTML = `
-            <div class="juego-generico-container">
-                <h2>¡Genial!</h2>
-                <p>Has respondido todas nuestras preguntas de lógica por ahora.</p>
-                <p>Tu puntaje final es: ${puntajeLogica}</p>
-                <button id="btn-volver-selector-logica-fin" class="btn-juego btn-siguiente">🎮 Volver a Juegos</button>
-            </div>`;
-        document.getElementById('btn-volver-selector-logica-fin').onclick = () => navigateTo('selectorJuegos');
+        terminarJuegoLogica(container, navigateTo, true);
         return;
     }
-
     container.innerHTML = `
-        <div class="juego-generico-container juego-logica-activo">
+        <div class="juego-generico-container juego-logica-activo animate__animated animate__fadeIn">
             <header class="juego-header">
                 <h1>🧠 Lógica y Acertijos</h1>
                 <div class="puntaje-juego-logica">Puntos: <span id="puntaje-logica-actual">${puntajeLogica}</span></div>
             </header>
-            
             <div class="pregunta-logica-container">
                 <p class="pregunta-texto">${preguntaActualLogica.pregunta}</p>
                 <input type="text" id="respuesta-logica" placeholder="Escribe tu respuesta aquí..." autofocus>
             </div>
-            
             <div id="feedback-logica" class="feedback-container"></div>
-            
             <div class="controles-juego-logica">
-                <button id="comprobar-logica" class="btn-juego btn-comprobar">✔️ Comprobar</button>
-                <button id="pista-logica" class="btn-juego btn-pista">💡 Pista</button>
-                <button id="siguiente-pregunta-logica" class="btn-juego btn-siguiente" style="display:none;">➡️ Siguiente Pregunta</button>
+                <button id="comprobar-logica" class="btn-juego btn-secundario">✔️ Comprobar</button>
+                <button id="pista-logica" class="btn-juego btn-advertencia">💡 Pista</button>
+                <button id="siguiente-pregunta-logica" class="btn-juego btn-primario" style="display:none;">➡️ Siguiente</button>
             </div>
-             <button id="terminar-juego-logica" class="btn-juego btn-terminar" style="margin-top: 15px;">🏁 Terminar Juego</button>
+            <button id="terminar-juego-logica-btn" class="btn-juego btn-acento" style="margin-top:15px;">🏁 Terminar y Guardar</button>
         </div>
     `;
-
     document.getElementById('comprobar-logica').onclick = () => comprobarRespuestaLogica(container, navigateTo);
     document.getElementById('pista-logica').onclick = mostrarPistaLogica;
     document.getElementById('siguiente-pregunta-logica').onclick = () => mostrarPreguntaLogica(container, navigateTo);
-    document.getElementById('terminar-juego-logica').onclick = () => terminarJuegoLogica(container, navigateTo);
-
+    document.getElementById('terminar-juego-logica-btn').onclick = () => terminarJuegoLogica(container, navigateTo, false);
     const respuestaInput = document.getElementById('respuesta-logica');
-    respuestaInput.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') comprobarRespuestaLogica(container, navigateTo);
-    });
+    if (respuestaInput) {
+        respuestaInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') comprobarRespuestaLogica(container, navigateTo);
+        });
+    }
 }
 
 function normalizarRespuesta(texto) {
-    return texto.toLowerCase().trim()
-        .normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Quitar tildes
+    return texto.toLowerCase().trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function comprobarRespuestaLogica(container, navigateTo) {
@@ -115,59 +107,82 @@ function comprobarRespuestaLogica(container, navigateTo) {
     const comprobarBtn = document.getElementById('comprobar-logica');
     const siguienteBtn = document.getElementById('siguiente-pregunta-logica');
     const pistaBtn = document.getElementById('pista-logica');
-
     if (!respuestaUsuarioEl || !feedbackEl || !preguntaActualLogica) return;
-
     const respuestaUsuario = normalizarRespuesta(respuestaUsuarioEl.value);
     const respuestaCorrecta = normalizarRespuesta(preguntaActualLogica.respuesta);
-
     if (respuestaUsuario === "") {
-        feedbackEl.innerHTML = `<p class="feedback-mensaje incorrecto animate__animated animate__headShake">Por favor, escribe una respuesta.</p>`;
+        feedbackEl.innerHTML = `<p class="feedback-mensaje incorrecto animate__animated animate__headShake">Escribe una respuesta.</p>`;
         return;
     }
-
     if (respuestaUsuario === respuestaCorrecta) {
         puntajeLogica += 10;
-        feedbackEl.innerHTML = `<p class="feedback-mensaje correcto animate__animated animate__tada">¡Correcto! La respuesta es "${preguntaActualLogica.respuesta}". <span class="puntos-ganados">(+10 pts)</span></p>`;
-        respuestaUsuarioEl.disabled = true;
-        comprobarBtn.style.display = 'none';
-        pistaBtn.style.display = 'none';
-        siguienteBtn.style.display = 'inline-block';
+        feedbackEl.innerHTML = `<p class="feedback-mensaje correcto animate__animated animate__tada">¡Correcto! <span class="puntos-ganados">(+10 pts)</span></p>`;
+        if(respuestaUsuarioEl) respuestaUsuarioEl.disabled = true;
+        if(comprobarBtn) comprobarBtn.style.display = 'none';
+        if(pistaBtn) pistaBtn.style.display = 'none';
+        if(siguienteBtn) siguienteBtn.style.display = 'inline-block';
     } else {
-        puntajeLogica -= (puntajeLogica > 0 ? 5 : 0); // No bajar de 0
-        feedbackEl.innerHTML = `<p class="feedback-mensaje incorrecto animate__animated animate__shakeX">Respuesta incorrecta. ¡Sigue intentando o pide una pista!</p>`;
+        puntajeLogica -= (puntajeLogica >= 5 ? 5 : puntajeLogica);
+        feedbackEl.innerHTML = `<p class="feedback-mensaje incorrecto animate__animated animate__shakeX">Incorrecto. La respuesta era: "${preguntaActualLogica.respuesta}".</p>`;
     }
-    document.getElementById('puntaje-logica-actual').textContent = puntajeLogica;
+    const puntajeEl = document.getElementById('puntaje-logica-actual');
+    if (puntajeEl) puntajeEl.textContent = puntajeLogica;
+}
+
+async function terminarJuegoLogica(container, navigateTo, finPorPreguntasAgotadas = false){
+    const auth = getAuth(); const user = auth.currentUser; const db = getFirestore();
+    let mensajeFinal = finPorPreguntasAgotadas ? "¡Completaste todas las preguntas!" : "Juego de Lógica Terminado";
+    const controlesOriginales = container.querySelector('.controles-juego-logica');
+    if (controlesOriginales) controlesOriginales.innerHTML = ''; // Limpiar botones de juego
+    const inputRespuesta = container.querySelector('#respuesta-logica');
+    if (inputRespuesta) inputRespuesta.style.display = 'none';
+    const btnTerminarOriginal = container.querySelector('#terminar-juego-logica-btn');
+    if(btnTerminarOriginal) btnTerminarOriginal.style.display = 'none';
+    const preguntaContainer = container.querySelector('.pregunta-logica-container');
+    if(preguntaContainer) preguntaContainer.style.display = 'none';
+    const headerEl = container.querySelector('.juego-header h1');
+    if(headerEl) headerEl.textContent = mensajeFinal;
+    
+    let feedbackGuardado = "";
+    if (user && puntajeLogica > 0) {
+        try {
+            feedbackGuardado = `<p class="info animate__animated animate__fadeIn">Guardando puntaje...</p>`;
+            container.querySelector('#feedback-logica').innerHTML = feedbackGuardado;
+            const scoresCollectionRef = collection(db, "puntajes");
+            await addDoc(scoresCollectionRef, { userId: user.uid, displayName: user.displayName || user.email.split('@')[0], puntaje: puntajeLogica, juego: "Lógica y Acertijos", fecha: serverTimestamp() });
+            feedbackGuardado = `<p class="feedback-mensaje correcto animate__animated animate__bounceIn">¡Puntaje de ${puntajeLogica} guardado!</p>`;
+        } catch (error) { console.error("Error guardando puntaje Lógica: ", error); feedbackGuardado = `<p class="error-mensaje">Error al guardar.</p>`; }
+    } else if (user && puntajeLogica <= 0) { feedbackGuardado = `<p class="info">No obtuviste puntos.</p>`;
+    } else if (!user) { feedbackGuardado = `<p class="error-mensaje">Logueate para guardar.</p>`; }
+    
+    const feedbackEl = container.querySelector('#feedback-logica');
+    if (feedbackEl) {
+         feedbackEl.innerHTML = `${feedbackGuardado}<p style="margin-top:1rem;">Puntaje final: <strong>${puntajeLogica}</strong></p>`;
+        const controlesFinales = document.createElement('div');
+        controlesFinales.className = 'controles-juego-generico'; controlesFinales.style.marginTop = '1rem';
+        controlesFinales.innerHTML = `
+            <button id="btn-jugar-logica-otravez" class="btn-juego btn-secundario">🧠 Jugar de Nuevo</button>
+            <button id="btn-volver-selector-logica-final" class="btn-juego btn-primario">🎮 Volver a Juegos</button>
+        `;
+        feedbackEl.parentNode.insertBefore(controlesFinales, feedbackEl.nextSibling); // Insertar después del feedback
+        document.getElementById('btn-jugar-logica-otravez').onclick = () => iniciarJuegoLogica(container, navigateTo);
+        document.getElementById('btn-volver-selector-logica-final').onclick = () => navigateTo('selectorJuegos');
+    }
+}
+
+export function iniciarJuegoLogica(appContainer, navigateTo) {
+    puntajeLogica = 0; // << CORRECCIÓN: Asegurar que se reinicie
+    preguntasLogicaUsadas = [];
+    mostrarPreguntaLogica(appContainer, navigateTo);
 }
 
 function mostrarPistaLogica() {
     const feedbackEl = document.getElementById('feedback-logica');
+    const pistaBtn = document.getElementById('pista-logica');
     if (preguntaActualLogica && preguntaActualLogica.pista) {
         feedbackEl.innerHTML = `<p class="feedback-mensaje info animate__animated animate__fadeInUp"><strong>Pista:</strong> ${preguntaActualLogica.pista}</p>`;
-        puntajeLogica -= (puntajeLogica > 2 ? 2 : 0); // Penalización por pista
+        puntajeLogica -= (puntajeLogica >= 2 ? 2 : 0); 
         document.getElementById('puntaje-logica-actual').textContent = puntajeLogica;
-        document.getElementById('pista-logica').disabled = true; // Solo una pista por pregunta
+        if(pistaBtn) pistaBtn.disabled = true; 
     }
-}
-function terminarJuegoLogica(container, navigateTo){
-    // Aquí podrías guardar el puntaje en Firebase si lo deseas, similar al juego de cartas
-    container.innerHTML = `
-        <div class="juego-generico-container">
-            <h2>Juego de Lógica Terminado</h2>
-            <p>Tu puntaje final fue: <strong>${puntajeLogica}</strong></p>
-            <p>¡Gracias por jugar!</p>
-            <button id="btn-jugar-logica-otravez" class="btn-juego btn-comprobar">🧠 Jugar de Nuevo (Lógica)</button>
-            <button id="btn-volver-selector-logica-final" class="btn-juego btn-siguiente">🎮 Volver a Juegos</button>
-        </div>`;
-    document.getElementById('btn-jugar-logica-otravez').onclick = () => iniciarJuegoLogica(container, navigateTo);
-    document.getElementById('btn-volver-selector-logica-final').onclick = () => navigateTo('selectorJuegos');
-}
-
-
-// Esta es la función que se importa en main.js
-export function iniciarJuegoLogica(appContainer, navigateTo) {
-    puntajeLogica = 0; // Reiniciar puntaje al iniciar un nuevo juego
-    preguntasLogicaUsadas = []; // Reiniciar preguntas usadas
-    appContainer.setAttribute('data-pantalla', 'juegoLogica');
-    mostrarPreguntaLogica(appContainer, navigateTo); // Llama a la función que realmente renderiza la pregunta
 }

@@ -1,15 +1,11 @@
 // src/componentes/perfil.js
 import { getFirestore, collection, query, where, orderBy, limit, getDocs } from "firebase/firestore";
-// No necesitas getAuth aquí si currentUser se pasa como argumento
 
 export async function renderProfilePage(container, currentUser, navigateTo) {
-    const db = getFirestore(); // Obtener instancia de Firestore
+    const db = getFirestore();
 
-    // Asegúrate de que currentUser no sea null
     if (!currentUser) {
         container.innerHTML = `<p class="error-mensaje">No se pudo cargar el perfil. Usuario no definido.</p>`;
-        // Podrías añadir un botón para reintentar el login o ir a home
-        // setTimeout(() => navigateTo('login'), 2000);
         return;
     }
 
@@ -23,47 +19,66 @@ export async function renderProfilePage(container, currentUser, navigateTo) {
             </header>
 
             <section class="seccion-puntajes-perfil">
-                <h3><i class="fas fa-star"></i> Mis Mejores Puntajes (Operaciones con Cartas) <i class="fas fa-star"></i></h3>
-                <div id="spinner-mis-puntajes" class="spinner">Cargando tus hazañas...</div>
-                <ul id="lista-mis-puntajes-perfil" class="leaderboard-lista">
-                    {/* Los puntajes se cargarán aquí */}
-                </ul>
+                <h3><i class="fas fa-medal"></i> Mis Mejores Puntajes</h3>
+                
+                <div class="puntajes-juego-especifico">
+                    <h4>🃏 Operaciones con Cartas:</h4>
+                    <div id="spinner-puntajes-cartas" class="spinner" style="font-size:0.9em; padding:5px;">Cargando...</div>
+                    <ul id="lista-puntajes-cartas" class="leaderboard-lista leaderboard-perfil"></ul>
+                </div>
+
+                <div class="puntajes-juego-especifico">
+                    <h4>🧠 Lógica y Acertijos:</h4>
+                    <div id="spinner-puntajes-logica" class="spinner" style="font-size:0.9em; padding:5px;">Cargando...</div>
+                    <ul id="lista-puntajes-logica" class="leaderboard-lista leaderboard-perfil"></ul>
+                </div>
+
+                <div class="puntajes-juego-especifico">
+                    <h4>⚛️ Ciencia Divertida:</h4>
+                    <div id="spinner-puntajes-ciencia" class="spinner" style="font-size:0.9em; padding:5px;">Cargando...</div>
+                    <ul id="lista-puntajes-ciencia" class="leaderboard-lista leaderboard-perfil"></ul>
+                </div>
             </section>
-            
-            {/* Puedes añadir más secciones aquí: cambiar nombre, etc. */}
-            {/* <button id="btn-editar-perfil" class="btn btn-primario" style="margin-top:1.5rem;">Editar Perfil (Próximamente)</button> */}
         </div>
     `;
 
-    const puntajesUl = document.getElementById('lista-mis-puntajes-perfil');
-    const spinner = document.getElementById('spinner-mis-puntajes');
+    // Función para cargar puntajes de un juego específico
+    async function cargarPuntajesUsuario(juegoId, ulElementId, spinnerId) {
+        const ulElement = document.getElementById(ulElementId);
+        const spinnerElement = document.getElementById(spinnerId);
+        if (!ulElement || !spinnerElement) return;
 
-    try {
-        const q = query(
-            collection(db, "puntajes"),
-            where("userId", "==", currentUser.uid),
-            where("juego", "==", "Operaciones con Cartas"),
-            orderBy("puntaje", "desc"),
-            limit(10) // Mostrar hasta 10 mejores puntajes del usuario para este juego
-        );
-        const querySnapshot = await getDocs(q);
+        try {
+            const q = query(
+                collection(db, "puntajes"),
+                where("userId", "==", currentUser.uid),
+                where("juego", "==", juegoId), // Filtra por el juego específico
+                orderBy("puntaje", "desc"),
+                limit(5) // Mostrar los 5 mejores del usuario para este juego
+            );
+            const querySnapshot = await getDocs(q);
+            spinnerElement.style.display = 'none';
 
-        if (spinner) spinner.style.display = 'none';
-
-        if (querySnapshot.empty) {
-            puntajesUl.innerHTML = '<li>Aún no has registrado puntajes en "Operaciones con Cartas". ¡A jugar!</li>';
-        } else {
-            querySnapshot.forEach((doc) => {
-                const data = doc.data();
-                const li = document.createElement('li');
-                const fechaFormat = data.fecha ? new Date(data.fecha.seconds * 1000).toLocaleDateString() : '-';
-                li.innerHTML = `<span class="date">${fechaFormat}</span> - <strong class="score">${data.puntaje} puntos</strong>`;
-                puntajesUl.appendChild(li);
-            });
+            if (querySnapshot.empty) {
+                ulElement.innerHTML = '<li>Aún no tienes puntajes registrados.</li>';
+            } else {
+                querySnapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const li = document.createElement('li');
+                    const fechaFormat = data.fecha ? new Date(data.fecha.seconds * 1000).toLocaleDateString() : '-';
+                    li.innerHTML = `<span class="date">${fechaFormat}</span> - <strong class="score">${data.puntaje} puntos</strong>`;
+                    ulElement.appendChild(li);
+                });
+            }
+        } catch (error) {
+            console.error(`Error cargando puntajes para ${juegoId}:`, error);
+            spinnerElement.style.display = 'none';
+            ulElement.innerHTML = '<li>Error al cargar puntajes.</li>';
         }
-    } catch (error) {
-        console.error("Error cargando puntajes del usuario para el perfil:", error);
-        if (spinner) spinner.style.display = 'none';
-        puntajesUl.innerHTML = '<li>Hubo un error al cargar tus puntajes.</li>';
     }
+
+    // Cargar puntajes para cada juego
+    cargarPuntajesUsuario("Operaciones con Cartas", "lista-puntajes-cartas", "spinner-puntajes-cartas");
+    cargarPuntajesUsuario("Lógica y Acertijos", "lista-puntajes-logica", "spinner-puntajes-logica");
+    cargarPuntajesUsuario("Ciencia Divertida", "lista-puntajes-ciencia", "spinner-puntajes-ciencia");
 }

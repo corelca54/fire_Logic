@@ -1,33 +1,27 @@
 // src/componentes/juego.js
 
-import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, query, orderBy, limit, getDocs, where } from "firebase/firestore"; // << 'where' AÑADIDO
 import { getAuth } from "firebase/auth";
 
 let mazoJuegoId = null;
 let puntuacion = 0;
 let juegoActual = null;
 
-// No se necesita appDiv global aquí si se maneja dentro de iniciarJuego
-
 async function iniciarJuego() {
   const auth = getAuth();
   const user = auth.currentUser;
-  const currentAppDiv = document.getElementById('app'); // Obtener appDiv aquí
+  const currentAppDiv = document.getElementById('app');
 
   if (!currentAppDiv) {
     console.error("Contenedor #app no encontrado al iniciar el juego.");
     return;
   }
-
   if (!user) {
     currentAppDiv.innerHTML = `<p class="aviso-login">Debes <a href="#" onclick="event.preventDefault(); window.navigateTo('login');">iniciar sesión</a> para jugar y guardar tus puntajes.</p>`;
-    // Asumimos que navigateTo está disponible globalmente o a través de window si es necesario
     return;
   }
-
   currentAppDiv.setAttribute('data-pantalla', 'juego');
   puntuacion = 0;
-  
   currentAppDiv.innerHTML = `
     <div class="juego-container animate__animated animate__fadeInUp">
       <div class="puntuacion-container">
@@ -49,7 +43,6 @@ async function iniciarJuego() {
       <div id="leaderboard-juego-container" class="leaderboard-container" style="margin-top:1.5rem;"></div>
     </div>
   `;
-
   document.getElementById('comprobar-juego').addEventListener('click', comprobarRespuesta);
   document.getElementById('siguiente-ronda-juego').addEventListener('click', nuevaRonda);
   document.getElementById('terminar-juego-btn').addEventListener('click', terminarYGuardarPuntaje);
@@ -59,14 +52,12 @@ async function iniciarJuego() {
         if (e.key === 'Enter') comprobarRespuesta();
     });
   }
-
   await nuevaRonda();
   await mostrarMejoresPuntajesJuego();
 }
 
-// ... (nuevaRonda, obtenerValorNumerico, comprobarRespuesta, animarPuntuacion, lanzarConfeti se mantienen como en la versión anterior que te di con esas mejoras)
-// Asegúrate de que esas funciones estén aquí. Reemplazaré solo las que necesitan cambio de Firebase.
-
+// ... (NUEVARONDA, OBTENERVALORNUMERICO, COMPROBARRESPUESTA, ANIMARPUNTUACION, LANZARCONFETI -> SIN CAMBIOS IMPORTANTES, MANTENER CÓDIGO ANTERIOR)
+// Solo me aseguro de que la función mostrarMejoresPuntajesJuego use 'where' correctamente.
 async function nuevaRonda() {
   const feedbackDiv = document.getElementById('feedback-juego');
   const respuestaInput = document.getElementById('respuesta-juego');
@@ -74,8 +65,8 @@ async function nuevaRonda() {
   const carta1El = document.getElementById('carta1-juego');
   const carta2El = document.getElementById('carta2-juego');
 
-  if (carta1El) carta1El.parentElement.classList.remove('carta-correcta', 'carta-incorrecta', 'animate__animated', 'animate__pulse', 'animate__shakeX');
-  if (carta2El) carta2El.parentElement.classList.remove('carta-correcta', 'carta-incorrecta', 'animate__animated', 'animate__pulse', 'animate__shakeX');
+  if (carta1El && carta1El.parentElement) carta1El.parentElement.classList.remove('carta-correcta', 'carta-incorrecta', 'animate__animated', 'animate__pulse', 'animate__shakeX');
+  if (carta2El && carta2El.parentElement) carta2El.parentElement.classList.remove('carta-correcta', 'carta-incorrecta', 'animate__animated', 'animate__pulse', 'animate__shakeX');
 
   if (!feedbackDiv || !respuestaInput || !comprobarBtn || !carta1El || !carta2El) {
     console.error("Elementos de la UI del juego no encontrados en nuevaRonda.");
@@ -197,7 +188,6 @@ function comprobarRespuesta() {
       <p class="feedback-mensaje incorrecto animate__animated animate__shakeX">¡Casi! ${pista}</p>
       <p class="info-ayuda">La respuesta correcta era ${juegoActual.resultado} ( ${juegoActual.valor1} ${juegoActual.operacion.simbolo} ${juegoActual.valor2} )</p>
       `;
-      // <button id="btn-pista-juego" class="btn-juego btn-pista">💡 Pista (Próxima)</button> // Botón de pista futuro
     if (carta1Wrapper) carta1Wrapper.classList.add('carta-incorrecta');
     if (carta2Wrapper) carta2Wrapper.classList.add('carta-incorrecta');
     respuestaInput.classList.add('input-error');
@@ -225,29 +215,25 @@ function lanzarConfeti() {
         confeti.className = 'confetti-piece';
         confeti.style.left = Math.random() * 100 + '%';
         confeti.style.backgroundColor = `hsl(${Math.random() * 360}, 70%, 60%)`;
-        confeti.style.animationDuration = (Math.random() * 1.5 + 1) + 's'; // Duración 1-2.5s
+        confeti.style.animationDuration = (Math.random() * 1.5 + 1) + 's';
         confeti.style.animationDelay = Math.random() * 0.3 + 's';
         gameContainer.appendChild(confeti);
-        setTimeout(() => confeti.remove(), 2500); // Limpiar
+        setTimeout(() => confeti.remove(), 2500);
     }
 }
 
 async function terminarYGuardarPuntaje() {
-  const auth = getAuth(); // Obtener instancia de Auth
+  const auth = getAuth();
   const user = auth.currentUser;
-  const db = getFirestore(); // Obtener instancia de Firestore
-
+  const db = getFirestore();
   const feedbackDiv = document.getElementById('feedback-juego');
   const controles = document.querySelector('.controles-juego');
-
   if (!feedbackDiv) return;
-
   if (controles) {
     Array.from(controles.children).forEach(btn => {
         if (btn.id !== 'jugar-de-nuevo-btn') btn.disabled = true;
     });
   }
-
   if (user && puntuacion > 0) {
     try {
       feedbackDiv.innerHTML = `<p class="info">Guardando tu brillante puntaje...</p>`;
@@ -270,18 +256,16 @@ async function terminarYGuardarPuntaje() {
   } else {
     feedbackDiv.innerHTML = `<p class="error-mensaje">Debes estar logueado para guardar puntajes.</p>`;
   }
-  
   if(controles) {
     let jugarDeNuevoBtn = document.getElementById('jugar-de-nuevo-btn');
     if (!jugarDeNuevoBtn) {
         jugarDeNuevoBtn = document.createElement('button');
         jugarDeNuevoBtn.id = 'jugar-de-nuevo-btn';
-        jugarDeNuevoBtn.className = 'btn-juego btn-primario'; // Reutilizar estilo
+        jugarDeNuevoBtn.className = 'btn-juego btn-primario';
         jugarDeNuevoBtn.innerHTML = '🚀 Jugar de Nuevo';
         jugarDeNuevoBtn.onclick = iniciarJuego; 
-        // Insertar antes del botón de terminar si aún existe o al final
         const terminarBtn = document.getElementById('terminar-juego-btn');
-        if(terminarBtn) controles.insertBefore(jugarDeNuevoBtn, terminarBtn.nextSibling);
+        if(terminarBtn && terminarBtn.parentNode === controles) controles.insertBefore(jugarDeNuevoBtn, terminarBtn.nextSibling);
         else controles.appendChild(jugarDeNuevoBtn);
     }
     jugarDeNuevoBtn.disabled = false;
@@ -289,23 +273,21 @@ async function terminarYGuardarPuntaje() {
 }
 
 async function mostrarMejoresPuntajesJuego() {
-  const db = getFirestore(); // Obtener instancia de Firestore
+  const db = getFirestore();
   const leaderboardContainer = document.getElementById('leaderboard-juego-container');
   if (!leaderboardContainer) return;
-
   leaderboardContainer.innerHTML = '<h4 style="margin-bottom:0.5rem; color:var(--color-primario);">🏆 Salón de la Fama (Operaciones) 🏆</h4>';
   const ul = document.createElement('ul');
-  ul.className = 'leaderboard-lista'; // Asegúrate de tener estilos para esto
-
+  ul.className = 'leaderboard-lista';
   try {
+    // LA SIGUIENTE LÍNEA ES LA CORREGIDA (juego.js:302 en tu error)
     const scoresQuery = query(
       collection(db, "puntajes"),
-      where("juego", "==", "Operaciones con Cartas"), // Filtrar por este juego
+      where("juego", "==", "Operaciones con Cartas"), // 'where' ahora está definido
       orderBy("puntaje", "desc"),
       limit(5) 
     );
     const querySnapshot = await getDocs(scoresQuery);
-    
     if (querySnapshot.empty) {
       ul.innerHTML = '<li>¡Sé el primero en dejar tu marca!</li>';
     } else {
