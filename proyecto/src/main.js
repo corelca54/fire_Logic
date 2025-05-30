@@ -1,7 +1,7 @@
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebaseConfig.js';
 
-import  mostrarHome from './componentes/home.js';
+import {mostrarHome} from './componentes/home.js';
 import  mostrarOriginal from './componentes/original.js';
 import  mostrarPerfil from './componentes/perfil.js';
 import  mostrarLogout from './componentes/logout.js';

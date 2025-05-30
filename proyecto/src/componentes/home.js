@@ -1,74 +1,64 @@
-// Versión mejorada con manejo de errores
-// conexion_api.js
+// src/componentes/home.js
+import { getAuth, onAuthStateChanged } from "firebase/auth";
+// Si vas a mostrar el leaderboard aquí, importa las funciones necesarias:
+import { mostrarMejoresPuntajesGenerales } from '../firebase/leaderboardService.js'; // (Ejemplo de ruta)
 
-// conexion_api.js
+function renderHomePage(appContainer) {
+    const auth = getAuth();
 
-const API_BASE = 'https://deckofcardsapi.com/api/deck';
+    appContainer.innerHTML = `
+        <div id="pantalla-bienvenida" class="fade-in">
+            <div class="bienvenida-contenido">
+                <h1>Fire Logic App</h1>
+                <p>Desafía tu mente con juegos de lógica, matemáticas y más.</p>
+                <div id="user-status-home">Cargando estado del usuario...</div>
+                <div id="home-actions">
+                    <!-- Los botones se añadirán dinámicamente -->
+                </div>
+                <div id="leaderboard-home-container" class="leaderboard-container" style="margin-top: 20px;">
+                    <!-- Aquí podrías cargar un leaderboard general si lo deseas -->
+                </div>
+            </div>
+        </div>
+    `;
+    appContainer.setAttribute('data-pantalla', 'inicio');
 
-// 🔄 Baraja un nuevo mazo y devuelve su deck_id
-export async function barajarMazo() {
-  try {
-    const respuesta = await fetch(`${API_BASE}/new/shuffle/?deck_count=1`, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
+    const userStatusDiv = document.getElementById('user-status-home');
+    const homeActionsDiv = document.getElementById('home-actions');
+
+    onAuthStateChanged(auth, (user) => {
+        if (user) {
+            userStatusDiv.innerHTML = `<p>¡Hola, ${user.displayName || user.email}!</p>`;
+            homeActionsDiv.innerHTML = `
+                <button id="btn-ir-a-juegos" class="btn-accion-home">🚀 Ir a Juegos</button>
+                <button id="btn-ver-perfil" class="btn-accion-home">👤 Mi Perfil</button>
+                <button id="btn-logout-home" class="btn-accion-home">🚪 Cerrar Sesión</button>
+            `;
+            document.getElementById('btn-logout-home').addEventListener('click', tuFuncionDeLogout);
+             document.getElementById('btn-ir-a-juegos').addEventListener('click', tuFuncionParaNavegarAJuegos);
+            document.getElementById('btn-ver-perfil').addEventListener('click', tuFuncionParaNavegarAPerfil);
+
+        } else {
+            userStatusDiv.innerHTML = `<p>¡Bienvenido! Inicia sesión para guardar tu progreso.</p>`;
+            homeActionsDiv.innerHTML = `
+                <button id="btn-login-home" class="btn-accion-home">🔑 Iniciar Sesión / Registrarse</button>
+            `;
+             document.getElementById('btn-login-home').addEventListener('click', tuFuncionParaNavegarALogin);
+        }
+        
+         if (document.getElementById('btn-ir-a-juegos') && window.navegarAJuegos) {
+            document.getElementById('btn-ir-a-juegos').addEventListener('click', window.navegarAJuegos);
+        }
+        // (Esto asume que tienes una función global 'navegarAJuegos' o similar)
     });
 
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP al barajar: ${respuesta.status}`);
-    }
-
-    const datos = await respuesta.json();
-    return datos.deck_id;
-  } catch (error) {
-    console.error('Error al barajar mazo:', error);
-
-    if (window.androidFallback && typeof window.androidFallback.getFallbackDeckId === 'function') {
-      return window.androidFallback.getFallbackDeckId(); // Android fallback
-    }
-
-    return null;
-  }
+    // Ejemplo de cómo podrías cargar el leaderboard aquí
+     if (typeof mostrarMejoresPuntajesGenerales === 'function') {
+    mostrarMejoresPuntajesGenerales('leaderboard-home-container');
+    } else {
+      console.warn('Función mostrarMejoresPuntajesGenerales no disponible para home.');
+     }
 }
 
-// 🃏 Obtiene un mazo completo de 52 cartas
-export async function obtenerCartas() {
-  try {
-    const respuesta = await fetch(`${API_BASE}/new/draw/?count=52`, {
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (!respuesta.ok) {
-      throw new Error(`Error HTTP: ${respuesta.status}`);
-    }
-
-    const datos = await respuesta.json();
-    return datos.cards;
-  } catch (error) {
-    console.error('Error al obtener cartas:', error);
-
-    if (window.androidFallback && typeof window.androidFallback.getLocalCards === 'function') {
-      return window.androidFallback.getLocalCards(); // Android fallback
-    }
-
-    return [];
-  }
-}
-
-// 📲 Compatibilidad con Android WebView
-if (window.AndroidInterface) {
-  window.AndroidInterface.registerAPI({
-    barajarMazo,
-    sacarCartas,
-    obtenerCartas
-  });
-}
-
-// También disponibles globalmente en el navegador
-window.barajarMazo = barajarMazo;
-window.sacarCartas = sacarCartas;
-window.obtenerCartas = obtenerCartas;
+// La exportación que tu main.js espera:
+export default renderHomePage;
