@@ -1,3 +1,5 @@
+/* src/style.css */
+
 /* ===== RESET Y ESTILOS GLOBALES ===== */
 * {
   margin: 0;
@@ -8,8 +10,9 @@
 :root {
   --color-primario: #3498db;
   --color-secundario: #2ecc71;
-  --color-acento: #e74c3c;
+  --color-acento: #e74c3c; /* Usabas f1c40f más abajo, decide cuál es el principal */
   --color-texto: #2c3e50;
+  --color-texto-claro: #f8f9fa;
   --color-fondo: #f8f9fa;
   --sombra: 0 4px 6px rgba(0, 0, 0, 0.1);
   --transicion: all 0.3s ease;
@@ -26,31 +29,60 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: 
+  background:
     var(--color-fondo) /* Color de respaldo */
-    url('assets/img/foninfo.png') /* Ruta corregida a la carpeta fondos */
-    center/cover /* Cubre todo el área manteniendo proporción */
-    no-repeat 
-    fixed; /* Fija el fondo al desplazar */
+    url('./componentes/assets/img/foninfo.png') /* RUTA CORREGIDA */
+    center/cover
+    no-repeat
+    fixed;
   line-height: 1.6;
-  position: relative;
-  margin: 0; /* Elimina márgenes por defecto */
+  position: relative; /* Necesario si tienes elementos posicionados absolutamente dentro del body */
+  margin: 0; /* Asegura que no haya márgenes por defecto */
 }
 
-/* ===== PANTALLA DE BIENVENIDA ===== */
-#pantalla-bienvenida {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-image: url('assets/img/iconos/inicio.png');
-  background-size: cover;
-  background-position: center;
+/* ===== ESTRUCTURA PRINCIPAL (Contenedor de la aplicación) ===== */
+main { /* Si tienes un <main> alrededor de #app, si no, estos estilos podrían ir a #app directamente */
+  flex: 1; /* Para que ocupe el espacio disponible si body es flex */
+  padding: 2rem; /* Padding general para el contenido */
+  /* margin-bottom: 80px;  Considera si esto es necesario con el menú fijo */
+  animation: fadeInUp 0.5s ease; /* Animación para la carga del contenido */
+}
+
+#app {
+  position: relative; /* Para que z-index funcione si es necesario */
+  z-index: 1;       /* Para estar por encima del fondo del body si es complejo */
+  /* Si main no existe, #app podría necesitar flex: 1; si es hijo directo de body */
+  /* También considera padding aquí si no usas un <main> wrapper */
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== PANTALLA DE BIENVENIDA INICIAL (Si es una superposición antes de #app) ===== */
+/* Si #pantalla-bienvenida es un div que desaparece, mantenlo. */
+/* Si es el contenido de home.js DENTRO de #app, considera integrar sus estilos */
+/* con #app[data-pantalla="inicio"] */
+
+#pantalla-bienvenida { /* Asumimos que esto es lo que se muestra en home.js */
+  /* Ya no necesita ser fixed si está dentro de #app que ocupa la pantalla */
+  /* Si #pantalla-bienvenida es un SPLASH SCREEN ANTES de que se cargue la app, entonces position:fixed está bien */
+  /* background-image: url('./componentes/assets/img/iconos/inicio.png'); /* RUTA CORREGIDA */
+  /* background-size: cover; */
+  /* background-position: center; */
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 1000;
+  min-height: calc(100vh - 100px); /* Ajusta según la altura de tu menú si es necesario */
+  padding: 2rem; /* Para que el contenido no toque los bordes */
+  /* z-index: 1000; /* Solo si es una superposición global */
   animation: fadeIn 0.5s ease;
 }
 
@@ -59,7 +91,7 @@ body {
   to { opacity: 1; }
 }
 
-.bienvenida-contenido {
+.bienvenida-contenido { /* Contenido dentro de #pantalla-bienvenida en home.js */
   background-color: rgba(255, 255, 255, 0.9);
   padding: 2.5rem;
   border-radius: 15px;
@@ -76,18 +108,49 @@ body {
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
 }
 
-#pantalla-bienvenida h1 {
+#pantalla-bienvenida h1 { /* Estilos para h1 DENTRO de #pantalla-bienvenida */
   color: var(--color-primario);
   margin-bottom: 1rem;
   font-size: 2.2rem;
 }
 
-#pantalla-bienvenida p {
+#pantalla-bienvenida p { /* Estilos para p DENTRO de #pantalla-bienvenida */
   color: #7f8c8d;
   margin-bottom: 2rem;
   font-size: 1.1rem;
 }
 
+/* BOTONES DE ACCIÓN EN LA PÁGINA HOME (generados en home.js) */
+.btn-accion-home {
+  background-color: var(--color-primario);
+  color: white;
+  border: none;
+  padding: 12px 25px; /* Ajustado el padding */
+  margin: 8px; /* Añadido margen */
+  font-size: 1.05rem; /* Ajustado el tamaño de fuente */
+  border-radius: 30px;
+  cursor: pointer;
+  transition: var(--transicion);
+  box-shadow: var(--sombra);
+  text-decoration: none; /* Por si se usa en un <a> */
+  display: inline-block; /* Para que el margen funcione bien */
+}
+
+.btn-accion-home:hover {
+  background-color: #2980b9; /* Primario más oscuro */
+  transform: translateY(-3px);
+  box-shadow: 0 7px 14px rgba(0, 0, 0, 0.15);
+}
+
+.btn-accion-home#btn-logout-home { /* Estilo específico si se necesita */
+  background-color: var(--color-acento); /* Rojo para logout */
+}
+.btn-accion-home#btn-logout-home:hover {
+  background-color: #c0392b; /* Acento más oscuro */
+}
+
+/* BOTÓN "EMPEZAR" (Si este es un botón separado en la bienvenida) */
+/* Si #btn-empezar es uno de los .btn-accion-home, estos estilos podrían fusionarse o eliminarse */
 #btn-empezar {
   background-color: var(--color-secundario);
   color: white;
@@ -106,49 +169,27 @@ body {
   box-shadow: 0 7px 14px rgba(0, 0, 0, 0.15);
 }
 
-/* ===== ESTRUCTURA PRINCIPAL ===== */
-main {
-  flex: 1;
-  padding: 2rem;
-  margin-bottom: 80px;
-  animation: fadeInUp 0.5s ease;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-#app {
-  position: relative;
-  z-index: 1;
-}
 
 /* ===== MENÚ INFERIOR ===== */
+/* Asegúrate que en tu HTML, el <nav id="menu"> también tenga class="menu-inferior" */
 .menu-inferior {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: rgba(44, 62, 80, 0.95);
+  background-color: rgba(44, 62, 80, 0.95); /* Color de fondo del menú */
   display: flex;
   justify-content: space-around;
   padding: 0.75rem 0;
-  z-index: 100;
+  z-index: 100; /* Para que esté por encima del contenido de #app */
   box-shadow: 0 -3px 15px rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px); /* Efecto de desenfoque si el navegador lo soporta */
 }
 
 .menu-inferior button {
   background: transparent;
   border: none;
-  color: #ecf0f1;
+  color: #ecf0f1; /* Color del texto del botón */
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -157,15 +198,15 @@ main {
   font-size: 0.9rem;
   transition: var(--transicion);
   border-radius: 8px;
-  min-width: 70px;
+  min-width: 70px; /* Ancho mínimo para cada botón */
 }
 
 .menu-inferior button:hover {
-  background-color: rgba(52, 73, 94, 0.7);
+  background-color: rgba(52, 73, 94, 0.7); /* Color al pasar el mouse */
   transform: translateY(-5px);
 }
 
-.menu-inferior button img {
+.menu-inferior button img { /* Si usas imágenes dentro de los botones del menú */
   width: 26px;
   height: 26px;
   margin-bottom: 0.25rem;
@@ -176,15 +217,44 @@ main {
   transform: scale(1.1);
 }
 
-/* ===== PANTALLA DE INICIO ===== */
+/* ===== FONDOS PARA DIFERENTES PANTALLAS EN #app ===== */
 #app[data-pantalla="inicio"] {
-  background-image: url('assets/img/iconos/inicio.png');
+  background-image: url('./componentes/assets/img/iconos/inicio.png'); /* RUTA CORREGIDA */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed; /* El fondo no se mueve con el scroll */
+  min-height: calc(100vh - 80px); /* Asegura que ocupe la pantalla menos el menú, ajustar 80px a la altura real del menú */
+}
+
+#app[data-pantalla="juego"] {
+  background-image: url('./componentes/assets/img/iconos/juego.png'); /* RUTA CORREGIDA */
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
-  
+  min-height: calc(100vh - 80px);
 }
 
+#app[data-pantalla="favoritos"] {
+  background-image: url('./componentes/assets/img/iconos/favoritos.png'); /* RUTA CORREGIDA */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: calc(100vh - 80px);
+}
+
+#app[data-pantalla="informacion"] {
+  background:
+    url('./componentes/assets/img/foninfo.png') center/cover no-repeat fixed; /* RUTA CORREGIDA */
+  padding: 20px; /* Padding para la pantalla de información */
+  min-height: calc(100vh - 80px); /* Asumiendo que 80px es la altura del menú inferior */
+  display: flex; /* Para centrar el .info-container si es necesario */
+  justify-content: center;
+  align-items: center;
+}
+
+/* ===== ESTILOS ESPECÍFICOS DE PANTALLAS (Los que ya tenías) ===== */
+
+/* PANTALLA DE INICIO (Contenido, buscador, cartas, etc.) */
 .buscador-container {
   display: flex;
   gap: 15px;
@@ -238,7 +308,7 @@ main {
   box-shadow: var(--sombra);
   transition: var(--transicion);
   position: relative;
-  aspect-ratio: 2/3;
+  aspect-ratio: 2/3; /* Mantiene la proporción de las cartas */
 }
 
 .card:hover {
@@ -249,7 +319,7 @@ main {
 .card img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: contain; /* O 'cover' dependiendo de tus imágenes de cartas */
   display: block;
 }
 
@@ -271,7 +341,7 @@ main {
 }
 
 .card .favorito:hover {
-  background: var(--color-acento);
+  background: var(--color-acento); /* Aquí usas el color-acento original #e74c3c */
   transform: scale(1.1);
 }
 
@@ -280,21 +350,14 @@ main {
   height: 18px;
 }
 
-/* ===== PANTALLA DE JUEGO ===== */
-#app[data-pantalla="juego"] {
-  background-image: url('assets/img/iconos/juego.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-}
-
+/* PANTALLA DE JUEGO */
 .juego-container {
   background: rgba(255, 255, 255, 0.92);
   padding: 2rem;
   border-radius: 18px;
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
   max-width: 800px;
-  margin: 0 auto;
+  margin: 2rem auto; /* Añadido margen superior e inferior para que no pegue con el menú si el fondo no cubre */
 }
 
 .puntaje {
@@ -393,7 +456,7 @@ main {
 #feedback {
   text-align: center;
   margin: 1.5rem 0;
-  min-height: 50px;
+  min-height: 50px; /* Para evitar saltos de layout */
   font-size: 1.2rem;
   font-weight: bold;
 }
@@ -403,7 +466,7 @@ main {
 }
 
 .incorrecto {
-  color: var(--color-acento);
+  color: var(--color-acento); /* #e74c3c */
 }
 
 .controles-juego {
@@ -446,21 +509,14 @@ main {
   transform: translateY(-3px);
 }
 
-/* ===== PANTALLA DE FAVORITOS ===== */
-#app[data-pantalla="favoritos"] {
-  background-image: url('assets/img/iconos/favoritos.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-}
-
+/* PANTALLA DE FAVORITOS */
 .sin-favoritos {
   text-align: center;
   padding: 2rem;
   background: rgba(255, 255, 255, 0.9);
   border-radius: 15px;
   max-width: 500px;
-  margin: 0 auto;
+  margin: 2rem auto; /* Añadido margen */
 }
 
 .sin-favoritos p {
@@ -468,59 +524,48 @@ main {
   color: var(--color-texto);
 }
 
+/* Botón Limpiar (reutilicé .btn-accion-home, pero si necesitas uno específico) */
 .btn-limpiar {
-  background-color: var(--color-acento);
+  background-color: var(--color-acento); /* #e74c3c */
   color: white;
+  /* Hereda otros estilos de .btn-accion-home si se le aplica esa clase */
+  /* O define aquí los estilos completos si es una clase única */
   margin: 1.5rem auto;
-  display: block;
-  padding: 0.75rem 1.5rem;
+  display: block; /* Para que el margin auto funcione horizontalmente */
+  padding: 0.75rem 1.5rem; /* Ejemplo de padding */
+  border: none;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: var(--transicion);
+  box-shadow: var(--sombra);
 }
 
 .btn-limpiar:hover {
-  background-color: #c0392b;
+  background-color: #c0392b; /* Acento más oscuro */
 }
 
-/* ===== VARIABLES Y ESTILOS BASE ===== */
-:root {
-  --color-primario: #3498db;
-  --color-secundario: #2ecc71;
-  --color-acento: #f1c40f;
-  --color-texto: #2c3e50;
-  --color-texto-claro: #f8f9fa;
-  --color-fondo: #f8f9fa;
-  --sombra: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --transicion: all 0.3s ease;
-}
 
-/* ===== PANTALLA DE INFORMACIÓN ===== */
-#app[data-pantalla="informacion"] {
-  background: 
-    url('assets/img/foninfo.png') center/cover no-repeat fixed;
-  padding: 20px;
-  min-height: calc(100vh - 80px);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
+/* PANTALLA DE INFORMACIÓN */
+/* El fondo ya está definido en #app[data-pantalla="informacion"] */
 
 /* CONTENEDOR PRINCIPAL (LIBRO AZUL) */
 .info-container {
-  background: 
+  background:
     linear-gradient(rgba(30, 144, 255, 0.1), rgba(30, 144, 255, 0.1)),
-    url('assets/img/iconos/info1.png') center/cover no-repeat;
-  border: 4px solid var(--color-acento);
+    url('./componentes/assets/img/iconos/info1.png') center/cover no-repeat; /* RUTA CORREGIDA */
+  border: 4px solid var(--color-acento); /* Cambiado a #f1c40f si ese es el acento deseado aquí */
   border-radius: 15px;
-  box-shadow: 
+  box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.4),
     inset 0 0 20px rgba(255, 255, 255, 0.3);
   padding: 40px;
   max-width: 800px;
   width: 90%;
-  margin: 20px auto;
+  margin: 20px auto; /* Centra el contenedor si la pantalla es más grande */
   position: relative;
-  overflow: hidden;
+  overflow: hidden; /* Para que el ::before no se salga */
   text-align: center;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px); /* Efecto sobre el fondo de #app */
 }
 
 /* EFECTO MÁGICO */
@@ -532,12 +577,12 @@ main {
   width: 200%;
   height: 200%;
   background: radial-gradient(
-    circle, 
-    rgba(255, 255, 255, 0.15) 0%, 
+    circle,
+    rgba(255, 255, 255, 0.15) 0%,
     transparent 70%
   );
   animation: rotate 20s linear infinite;
-  z-index: 0;
+  z-index: 0; /* Detrás del contenido */
 }
 
 @keyframes rotate {
@@ -547,8 +592,8 @@ main {
 /* CONTENIDO PRINCIPAL */
 .info-content {
   position: relative;
-  z-index: 2;
-  color: var(--color-texto-claro);
+  z-index: 2; /* Por encima del ::before */
+  color: var(--color-texto-claro); /* Texto claro para contraste con fondo oscuro/imagen */
   text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
 }
 
@@ -556,9 +601,9 @@ main {
 .info-content h2 {
   font-size: 2.2rem;
   margin-bottom: 25px;
-  color: var(--color-acento);
-  text-shadow: 
-    0 0 10px rgba(241, 196, 15, 0.7),
+  color: var(--color-acento); /* #f1c40f o #e74c3c, sé consistente con tu paleta */
+  text-shadow:
+    0 0 10px rgba(241, 196, 15, 0.7), /* Asume que el acento es amarillo aquí */
     1px 1px 3px rgba(0, 0, 0, 0.8);
 }
 
@@ -575,11 +620,11 @@ main {
   height: 330px;
   background: white;
   border-radius: 12px;
-  box-shadow: 
+  box-shadow:
     0 8px 25px rgba(0, 0, 0, 0.3),
     inset 0 0 15px rgba(0, 0, 0, 0.1);
   overflow: hidden;
-  border: 5px solid var(--color-acento);
+  border: 5px solid var(--color-acento); /* Amarillo o rojo */
   margin-bottom: 1.5rem;
   transition: var(--transicion);
   position: relative;
@@ -587,7 +632,7 @@ main {
 
 .info-card:hover {
   transform: translateY(-5px) rotate(2deg);
-  box-shadow: 
+  box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.4),
     inset 0 0 20px rgba(0, 0, 0, 0.2);
 }
@@ -603,7 +648,7 @@ main {
   text-align: center;
   margin-top: 15px;
   font-weight: bold;
-  color: var(--color-acento);
+  color: var(--color-acento); /* Amarillo o rojo */
   font-size: 1.2rem;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.7);
 }
@@ -611,7 +656,7 @@ main {
 /* INFORMACIÓN EN GRID */
 .info-grid {
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: 1fr; /* Considera '1fr 1fr' si quieres dos columnas en desktop */
   gap: 1.2rem;
   margin: 2.5rem 0;
 }
@@ -619,13 +664,13 @@ main {
 .info-item {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.85); /* Fondo semitransparente para items */
   padding: 1rem 1.5rem;
   border-radius: 10px;
   transition: var(--transicion);
   box-shadow: var(--sombra);
   text-align: left;
-  color: var(--color-texto);
+  color: var(--color-texto); /* Texto oscuro para contraste con fondo claro del item */
 }
 
 .info-item:hover {
@@ -637,7 +682,7 @@ main {
   width: 32px;
   height: 32px;
   margin-right: 1.2rem;
-  filter: drop-shadow(0 0 3px rgba(241, 196, 15, 0.7));
+  filter: drop-shadow(0 0 3px rgba(241, 196, 15, 0.7)); /* Asume acento amarillo */
 }
 
 /* TEXTO DESCRIPTIVO */
@@ -647,13 +692,13 @@ main {
   border-radius: 10px;
   margin-top: 2rem;
   backdrop-filter: blur(5px);
-  border: 1px solid rgba(241, 196, 15, 0.3);
+  border: 1px solid rgba(241, 196, 15, 0.3); /* Asume acento amarillo */
 }
 
 .info-descripcion {
   font-size: 1.1rem;
   line-height: 1.7;
-  color: var(--color-texto-claro);
+  color: var(--color-texto-claro); /* Texto claro para contraste */
   margin: 0;
 }
 
@@ -662,38 +707,10 @@ main {
   display:inline-block;
   margin-top: 4px;
   font-size: 0.9rem;
-  color: var(--color-primario);
+  color: var(--color-primario); /* Azul para enlaces */
   font-weight: bold;
-  
 }
 
-/* RESPONSIVE */
-@media (max-width: 768px) {
-  .info-container {
-    padding: 30px 20px;
-  }
-  
-  .info-content h2 {
-    font-size: 1.8rem;
-  }
-  
-  .info-card {
-    width: 180px;
-    height: 270px;
-  }
-  
-  .info-item {
-    flex-direction: column;
-    text-align: center;
-    padding: 1rem;
-    line-height: 1.6;
-  }
-  
-  .info-icon {
-    margin-right: 0;
-    margin-bottom: 0.8rem;
-  }
-}
 /* ===== EFECTOS ESPECIALES ===== */
 @keyframes bounce {
   0%, 100% { transform: translateY(0); }
@@ -708,10 +725,11 @@ main {
   position: fixed;
   width: 10px;
   height: 10px;
-  background-color: var(--color-secundario);
+  background-color: var(--color-secundario); /* Verde para confetti */
   opacity: 0;
-  z-index: 1000;
+  z-index: 1000; /* Por encima de todo */
   animation: confettiFall 3s linear forwards;
+  pointer-events: none; /* Para que no interfiera con clics */
 }
 
 @keyframes confettiFall {
@@ -725,40 +743,65 @@ main {
   }
 }
 
-/* ===== MEDIA QUERIES ===== */
+/* ===== MEDIA QUERIES (Adaptabilidad) ===== */
 @media (max-width: 768px) {
   html {
     font-size: 15px;
   }
-  /* Añade esto para dispositivos móviles */
-@media (max-width: 768px) {
+
   body {
-    background-attachment: scroll; /* Mejor rendimiento en móviles */
-    background-size: cover;
+    background-attachment: scroll; /* Mejor rendimiento en móviles, el fondo se moverá con el scroll */
   }
-}
-  
+
   main {
     padding: 1.5rem;
+    margin-bottom: 70px; /* Ajustar si la altura del menú cambia en móvil */
   }
   
+  #app[data-pantalla="inicio"],
+  #app[data-pantalla="juego"],
+  #app[data-pantalla="favoritos"],
+  #app[data-pantalla="informacion"] {
+    min-height: calc(100vh - 70px); /* Ajustar si la altura del menú cambia */
+  }
+
   .card-container {
     grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 1.2rem;
   }
-  
+
   .info-container {
-    padding: 1.8rem;
+    padding: 30px 20px; /* Menos padding en móvil */
+  }
+
+  .info-content h2 {
+    font-size: 1.8rem;
+  }
+
+  .info-card {
+    width: 180px;
+    height: 270px;
+  }
+
+  .info-item {
+    flex-direction: column;
+    text-align: center;
+    padding: 1rem;
+  }
+
+  .info-icon {
+    margin-right: 0;
+    margin-bottom: 0.8rem;
   }
   
-  .menu-inferior button span {
-    display: none;
+  .menu-inferior button span { /* Si los botones del menú tienen texto en <span> */
+    display: none; /* Oculta el texto en móviles para ahorrar espacio */
   }
   
-  .menu-inferior button img {
+  .menu-inferior button img { /* Si hay imágenes en los botones del menú */
     width: 28px;
     height: 28px;
-    margin-bottom: 0;
+    margin-bottom: 0; /* Quita el margen si el texto está oculto */
   }
   
   .cartas-juego {
@@ -778,21 +821,23 @@ main {
   
   .bienvenida-contenido {
     padding: 1.8rem;
+    width: 95%;
   }
   
   .card-container {
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* O dos columnas: '1fr 1fr' */
     gap: 1rem;
   }
   
-  .info-card {
-    width: 180px;
-    height: 270px;
+  .info-card { /* Reducir aún más si es necesario */
+    width: 150px; 
+    height: 225px;
   }
   
   .juego-container,
   .info-container {
     padding: 1.5rem;
+    margin: 1rem auto; /* Reducir margen */
   }
   
   #respuesta {
@@ -800,4 +845,456 @@ main {
     height: 50px;
     font-size: 1.5rem;
   }
+
+  .btn-accion-home { /* Botones de home más pequeños en móviles */
+    padding: 10px 20px;
+    font-size: 0.95rem;
+  }
+}
+/* En src/style.css (añade esto al final o en una sección apropiada) */
+
+/* VISTA "MIS MAZOS" (NUEVA HOME) */
+.mis-mazos-vista {
+  padding: 1rem; /* Menos padding que antes si el contenido es más denso */
+  max-width: 1200px; /* Limitar ancho para pantallas grandes */
+  margin: 0 auto; /* Centrar */
+}
+
+.mazos-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.mazos-header h1 {
+  color: var(--color-primario);
+  margin-bottom: 0.5rem;
+}
+
+.mazos-header p {
+  color: var(--color-texto); /* O un color más claro si el fondo de 'home' es oscuro */
+  margin-bottom: 1rem;
+}
+
+.filtros-mazos-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  flex-wrap: wrap; /* Para que se adapte en móviles */
+}
+
+.filtros-mazos-container select,
+.filtros-mazos-container button {
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--color-primario);
+  border-radius: 20px;
+  font-size: 0.95rem;
+  background-color: white;
+  cursor: pointer;
+}
+
+.filtros-mazos-container button#btn-reset-filtros-mazos {
+  background-color: var(--color-secundario);
+  color: white;
+  border-color: var(--color-secundario);
+}
+.filtros-mazos-container button#btn-reset-filtros-mazos:hover {
+  background-color: #27ae60;
+}
+
+
+/* El .card-container y .card ya deberían estar definidos y se reutilizarán. */
+/* Asegúrate que .card-container permita que las cartas se distribuyan bien. */
+/* Ejemplo: */
+/* .card-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); // Ajusta minmax para el tamaño de carta deseado
+  gap: 10px;
+} */
+/* .card img {
+  width: 100%;
+  height: auto; // O un aspect-ratio
+  display: block;
+  border-radius: 6px; // Si las cartas no tienen bordes redondeados por defecto
+} */
+
+/* Spinner y mensajes de error ya los tenías o puedes usar los que te di antes */
+.spinner {
+  font-size: 1.2em;
+  color: var(--color-texto);
+  padding: 20px;
+  text-align: center;
+}
+.error-mensaje {
+  color: var(--color-acento);
+  background-color: #ffebee;
+  padding: 0.75rem;
+  border-radius: 5px;
+  margin-top: 1rem;
+  border: 1px solid var(--color-acento);
+  text-align: center;
+}
+.info-mensaje { /* Para "No hay cartas que coincidan" */
+  color: var(--color-texto);
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+/* Si el fondo de #app[data-pantalla="home"] es muy oscuro, ajusta el color del texto general */
+#app[data-pantalla="home"] {
+  /* background-image: url('./componentes/assets/img/iconos/inicio.png');  */
+  /* Quizás un fondo más neutro o temático de cartas para esta vista */
+  background-color: #e8eaf6; /* Un fondo claro ejemplo */
+  color: var(--color-texto); /* Asegurar buen contraste */
+  min-height: calc(100vh - 70px); /* Ajustar a la altura del menú */
+}
+/* En src/style.css */
+
+/* ... (tus estilos existentes) ... */
+
+/* ESTILOS MEJORADOS PARA EL JUEGO */
+.juego-container {
+  /* ... (tus estilos existentes para juego-container) ... */
+  background: rgba(255, 255, 255, 0.95); /* Un poco más opaco */
+  border: 2px solid var(--color-primario);
+  position: relative; /* Para el confeti */
+  overflow: hidden; /* Para el confeti que se sale */
+}
+
+.puntuacion-container {
+  font-size: 1.5rem; /* Más grande */
+  margin-bottom: 1.5rem;
+  text-align: center;
+  color: var(--color-primario); /* Color primario */
+  font-weight: bold;
+  padding: 10px;
+  background-color: #eaf2f8;
+  border-radius: 8px;
+  box-shadow: inset 0 0 5px rgba(0,0,0,0.1);
+}
+.puntuacion-emoji {
+  display: inline-block;
+  animation: bounceEmoji 2s infinite;
+}
+@keyframes bounceEmoji {
+  0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+  40% {transform: translateY(-10px);}
+  60% {transform: translateY(-5px);}
+}
+.puntuacion-valor {
+  /* Clase para animar el número si es necesario */
+}
+
+
+.carta-juego-wrapper { /* Nuevo contenedor para animaciones de carta individualmente */
+    perspective: 1000px; /* Para efecto 3D si lo usas */
+    transition: transform 0.3s ease-in-out;
+}
+.carta-juego-wrapper.carta-correcta .carta-juego {
+    border: 3px solid var(--color-secundario);
+    box-shadow: 0 0 15px var(--color-secundario);
+}
+.carta-juego-wrapper.carta-incorrecta .carta-juego {
+    border: 3px solid var(--color-acento);
+    box-shadow: 0 0 15px var(--color-acento);
+}
+.carta-juego {
+  /* ... (tus estilos existentes para .carta-juego) ... */
+  border: 3px solid transparent; /* Borde inicial transparente */
+  transition: var(--transicion), border-color 0.3s, box-shadow 0.3s; /* Añadir transiciones */
+}
+.carta-placeholder {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    font-style: italic;
+    color: #aaa;
+}
+
+
+.feedback-container { /* Renombrado de #feedback-juego a clase */
+  text-align: center;
+  margin: 1.5rem 0;
+  min-height: 60px; /* Un poco más de espacio */
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+.feedback-mensaje { /* Clase base para mensajes de feedback */
+    padding: 10px 15px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    display: inline-block; /* Para que las animaciones de Animate.css funcionen bien */
+}
+.feedback-mensaje.correcto {
+  color: white;
+  background-color: var(--color-secundario);
+  box-shadow: 0 0 10px var(--color-secundario);
+}
+.feedback-mensaje.incorrecto {
+  color: white;
+  background-color: var(--color-acento);
+  box-shadow: 0 0 10px var(--color-acento);
+}
+.puntos-ganados {
+    font-weight: normal;
+    font-size: 0.9em;
+    opacity: 0.9;
+}
+.info-ayuda {
+  font-size: 1rem;
+  color: #555;
+  margin-top: 0.5rem;
+}
+.racha {
+  color: #e67e22; /* Naranja para racha */
+  font-size: 1.3em;
+  text-shadow: 0 0 5px #f39c12;
+}
+
+
+#respuesta-juego {
+  /* ... (tus estilos existentes) ... */
+  border-width: 3px; /* Borde más grueso */
+  transition: var(--transicion), border-color 0.3s, box-shadow 0.3s;
+}
+#respuesta-juego.input-error {
+    border-color: var(--color-acento)!important; /* Forzar borde rojo */
+    animation: shakeHorizontal 0.5s; /* Animación simple de error */
+}
+@keyframes shakeHorizontal { /* Para el input error sin Animate.css */
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+  20%, 40%, 60%, 80% { transform: translateX(5px); }
+}
+
+.btn-juego { /* Clase base para botones del juego */
+  padding: 0.8rem 1.8rem; /* Padding un poco más grande */
+  border: none;
+  border-radius: 30px;
+  font-size: 1.1rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: var(--transicion), transform 0.1s ease;
+  box-shadow: var(--sombra);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+}
+.btn-juego:hover {
+  transform: translateY(-3px) scale(1.03);
+  filter: brightness(1.1);
+}
+.btn-juego:active {
+    transform: translateY(-1px) scale(0.98);
+}
+.btn-juego.btn-comprobar { background-color: var(--color-secundario); }
+.btn-juego.btn-siguiente { background-color: var(--color-primario); }
+.btn-juego.btn-terminar { background-color: var(--color-acento); }
+.btn-juego.btn-pista { background-color: #f1c40f; color: var(--color-texto); }
+
+
+/* CONFETI */
+.confetti-piece {
+    position: absolute;
+    width: 8px;
+    height: 15px;
+    opacity: 0;
+    transform-style: preserve-3d; /* Para rotaciones 3D si las añades */
+    animation: fall ease-out forwards;
+    pointer-events: none;
+}
+@keyframes fall {
+    0% {
+        opacity: 1;
+        transform: translateY(-20px) rotateZ(0deg) rotateY(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(calc(100% + 100px)) rotateZ(360deg) rotateY(720deg); /* Cae más abajo y rota */
+    }
+}
+/* src/style.css */
+
+/* ... (Todos tus estilos existentes, incluyendo los de .btn-juego, .card-container, etc.) ... */
+
+/* ESTILOS PARA PANTALLA DE INICIO (MIS MAZOS - home.js) */
+#app[data-pantalla="home"] {
+  /* background-image: url('./componentes/assets/img/un_fondo_para_mazos.png'); */ /* Descomenta y ajusta si tienes una imagen */
+  background-color: #e0e0e0; /* Un gris claro, puedes cambiarlo */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--color-texto);
+  min-height: calc(100vh - 70px); /* Ajustar 70px a la altura de tu menú inferior */
+  padding: 1rem;
+}
+
+.mis-mazos-vista {
+  padding: 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mazos-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background-color: rgba(255, 255, 255, 0.2); /* Ligero fondo para el header */
+  border-radius: 8px;
+}
+/* ... (otros estilos para .filtros-mazos-container que te di antes) ... */
+
+
+/* ESTILOS PARA PANTALLA DE SELECCIÓN DE JUEGOS */
+#app[data-pantalla="selectorJuegos"] {
+  background-image: url('./componentes/assets/img/iconos/juego.png'); /* O la imagen que tenías para el selector */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: calc(100vh - 70px);
+  padding: 1rem;
+  display: flex; /* Para centrar .selector-juegos-container si es necesario */
+  justify-content: center;
+  align-items: flex-start; /* Alinea arriba */
+}
+
+.selector-juegos-container {
+  padding: 2rem;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.85); /* Fondo para el contenido */
+  border-radius: 15px;
+  box-shadow: var(--sombra);
+  max-width: 900px; /* O el ancho que prefieras */
+  width: 90%;
+  margin-top: 2rem; /* Margen superior */
+}
+.selector-juegos-container h2 {
+  color: var(--color-primario);
+  margin-bottom: 2rem;
+}
+.lista-juegos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+}
+.btn-seleccion-juego {
+  background-color: white;
+  color: var(--color-texto);
+  border: 2px solid var(--color-primario);
+  padding: 1.5rem 1rem;
+  font-size: 1.1rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: var(--transicion);
+  box-shadow: var(--sombra);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 180px; /* Para que todos tengan una altura similar */
+  justify-content: center; /* Centrar contenido verticalmente */
+}
+.btn-seleccion-juego:hover {
+  border-color: var(--color-secundario);
+  background-color: #f8f8f8;
+  transform: translateY(-5px) scale(1.02);
+}
+.btn-seleccion-juego .emoji-juego {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  line-height: 1; /* Ajustar si el emoji tiene mucho espacio */
+}
+.btn-seleccion-juego .descripcion-juego {
+  font-size: 0.9rem;
+  color: #7f8c8d;
+  margin-top: 0.5rem;
+  flex-grow: 1; /* Para que ocupe espacio si es necesario */
+}
+.btn-proximamente { /* Si mantienes botones deshabilitados */
+  opacity: 0.6;
+  cursor: not-allowed;
+  border-color: #bdc3c7;
+}
+.btn-proximamente:hover {
+    background-color: white;
+    transform: none;
+    border-color: #bdc3c7;
+}
+
+
+/* Estilos para las pantallas de juego genéricas (placeholders) */
+.juego-generico-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 2rem auto;
+  background-color: rgba(255, 255, 255, 0.95); /* Un poco más opaco */
+  border-radius: 15px;
+  box-shadow: var(--sombra);
+  text-align: center;
+  border: 2px solid var(--color-primario); /* Borde similar al juego de cartas */
+}
+
+.juego-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.juego-header h1 {
+  color: var(--color-primario);
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
+}
+
+.proximamente-aviso {
+  font-style: italic;
+  color: var(--color-secundario);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.juego-contenido-placeholder {
+  padding: 1rem 0;
+  margin-bottom: 1.5rem;
+  min-height: 150px; 
+  font-size: 1.1rem;
+  color: #555;
+}
+.juego-contenido-placeholder img { /* Estilo para la imagen de "Próximamente" */
+    display: block;
+    margin: 1.5rem auto;
+    max-width: 150px;
+    opacity: 0.7;
+}
+
+
+.controles-juego-generico {
+  margin-top: 1rem;
+}
+/* Reutiliza .btn-juego o .btn-accion-home para el botón de volver, o crea uno nuevo */
+
+
+/* Fondos para las nuevas pantallas de juego */
+#app[data-pantalla="juegoLogica"],
+#app[data-pantalla="juegoCiencia"] {
+  background-color: #e9ebee; /* Un gris muy claro */
+  /* background-image: url('./componentes/assets/img/fondo_desafio_mental.png'); */ /* Descomenta y ajusta si tienes imagen */
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: calc(100vh - 70px);
+  padding: 1rem; /* Padding para que el contenido no pegue */
+  display: flex; /* Para centrar .juego-generico-container */
+  justify-content: center;
+  align-items: center; /* Centra verticalmente si el contenido es menor que la pantalla */
 }
