@@ -1,14 +1,24 @@
+// src/componentes/original.js
+
 let todasLasCartas = [];
 let mazoActual = 'all';
+
 // Verifica si localStorage está disponible
 const storage = (() => {
   try {
-    return window.localStorage;
+    const s = window.localStorage;
+    s.setItem('__test__', '1'); // Intenta escribir
+    s.removeItem('__test__');   // Intenta borrar
+    return s;
   } catch (e) {
+    console.warn("localStorage no está disponible. Los favoritos no persistirán entre sesiones.");
+    // Fallback a un objeto en memoria que simula la API de localStorage
+    const memoryStore = {};
     return {
-      getItem: () => null,
-      setItem: () => {},
-      removeItem: () => {}
+      getItem: (key) => memoryStore[key] || null,
+      setItem: (key, value) => { memoryStore[key] = String(value); },
+      removeItem: (key) => { delete memoryStore[key]; },
+      clear: () => { for (const key in memoryStore) delete memoryStore[key]; }
     };
   }
 })();
@@ -19,60 +29,77 @@ function esFavorita(codigoCarta) {
   return favoritos.some(carta => carta.code === codigoCarta);
 }
 
-async function mostrarInicio() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    <h1>Explora Todas las Cartas</h1>
-    
-    <div class="buscador-container">
-      <input type="text" id="buscador" placeholder="🔍 Buscar por nombre (ej: ace, king, 5) o palo...">
-      <select id="filtro-palo">
-        <option value="all">Todos los palos</option>
-        <option value="HEARTS">♥ Corazones</option>
-        <option value="DIAMONDS">♦ Diamantes</option>
-        <option value="CLUBS">♣ Tréboles</option>
-        <option value="SPADES">♠ Picas</option>
-      </select>
+// MODIFICADO: Acepta appContainer como argumento
+async function mostrarContenidoOriginal(appContainer) { // Renombrado para claridad, o puedes mantener mostrarInicio
+  if (!appContainer) {
+    console.error("Contenedor de la app no fue proporcionado a mostrarContenidoOriginal.");
+    return;
+  }
+  appContainer.setAttribute('data-pantalla', 'original-cartas'); // Para estilos
+  appContainer.innerHTML = `
+    <div class="original-page-container"> <!-- Contenedor específico para esta página -->
+      <h1>Explora Todas las Cartas</h1>
+      
+      <div class="buscador-container">
+        <input type="text" id="buscador-original" placeholder="🔍 Buscar por nombre (ej: ace, king, 5) o palo...">
+        <select id="filtro-palo-original">
+          <option value="all">Todos los palos</option>
+          <option value="HEARTS">♥ Corazones</option>
+          <option value="DIAMONDS">♦ Diamantes</option>
+          <option value="CLUBS">♣ Tréboles</option>
+          <option value="SPADES">♠ Picas</option>
+        </select>
+      </div>
+      
+      <div id="loading-original" class="loading-indicator">Cargando cartas...</div>
+      <div id="card-container-original" class="card-container"></div>
     </div>
-    
-    <div id="loading">Cargando cartas...</div>
-    <div id="card-container" class="card-container"></div>
   `;
 
-  const loading = document.getElementById('loading');
+  const loading = document.getElementById('loading-original');
+  const cardContainer = document.getElementById('card-container-original'); // Guardar referencia
 
-  // Cargar todas las cartas al inicio
+  // Cargar todas las cartas al inicio si no están ya cargadas
   if (todasLasCartas.length === 0) {
     try {
       loading.style.display = 'block';
       const response = await fetch('https://deckofcardsapi.com/api/deck/new/draw/?count=52');
+      if (!response.ok) throw new Error(`Error HTTP al cargar cartas: ${response.status}`);
       const data = await response.json();
+      if (!data.success) throw new Error(data.error || 'Fallo al obtener cartas de la API');
       todasLasCartas = data.cards;
-      mostrarCartas(todasLasCartas);
+      _mostrarCartasInterno(todasLasCartas, cardContainer); // Pasar cardContainer
     } catch (error) {
       console.error('Error al cargar cartas:', error);
-      loading.innerHTML = `
-        <p class="error">Error al cargar las cartas. Por favor recarga la página.</p>
-      `;
+      loading.innerHTML = `<p class="error">Error al cargar las cartas. Por favor recarga la página o revisa tu conexión.</p>`;
     } finally {
       loading.style.display = 'none';
     }
   } else {
-    mostrarCartas(todasLasCartas);
-    loading.style.display = 'none'; // También ocultar si ya están en caché
+    _mostrarCartasInterno(todasLasCartas, cardContainer); // Pasar cardContainer
+    loading.style.display = 'none';
   }
 
-  // Event listeners
-  document.getElementById('buscador').addEventListener('input', filtrarCartas);
-  document.getElementById('filtro-palo').addEventListener('change', function() {
+  // Event listeners (asegurarse de que no se dupliquen si esta función se llama múltiples veces)
+  // Es mejor removerlos antes de añadirlos o usar delegación de eventos.
+  // Por simplicidad, los dejamos así por ahora, pero tenlo en cuenta.
+  const buscadorInput = document.getElementById('buscador-original');
+  const filtroPaloSelect = document.getElementById('filtro-palo-original');
+
+  buscadorInput.oninput = () => _filtrarCartasInterno(cardContainer); // Pasar cardContainer
+  filtroPaloSelect.onchange = function() {
     mazoActual = this.value;
-    filtrarCartas();
-  });
+    _filtrarCartasInterno(cardContainer); // Pasar cardContainer
+  };
 }
 
-function mostrarCartas(cartas) {
-  const container = document.getElementById('card-container');
-  
+// Funciones internas renombradas con _ para indicar que son "privadas" de este módulo
+// y para evitar colisiones si se exportan accidentalmente.
+function _mostrarCartasInterno(cartas, container) { // Acepta container
+  if (!container) {
+      console.error("Contenedor de cartas no encontrado en _mostrarCartasInterno");
+      return;
+  }
   if (cartas.length === 0) {
     container.innerHTML = '<p>No se encontraron cartas. Intenta con otro filtro.</p>';
     return;
@@ -80,71 +107,95 @@ function mostrarCartas(cartas) {
   
   container.innerHTML = cartas.map(carta => `
     <div class="card">
-      <img src="${carta.image}" alt="${carta.value} of ${carta.suit}">
-      <button class="favorito" onclick="toggleFavorito('${carta.code}')">
-        <img src="img/iconos/${esFavorita(carta.code) ? 'favorito-lleno.png' : 'favorito.png'}" alt="Favorito">
+      <img src="${carta.image}" alt="${carta.value} of ${carta.suit}" data-code="${carta.code}">
+      <button class="favorito">
+        <img src="assets/img/iconos/${esFavorita(carta.code) ? 'favorito-lleno.png' : 'favorito.png'}" alt="Toggle Favorito">
       </button>
     </div>
   `).join('');
+
+  // Añadir event listeners a los botones de favorito después de crearlos
+  container.querySelectorAll('.favorito').forEach(button => {
+    button.onclick = function() {
+        const cardElement = this.closest('.card');
+        const imgElement = cardElement.querySelector('img[data-code]');
+        if (imgElement) {
+            toggleFavorito(imgElement.dataset.code);
+        }
+    };
+  });
 }
 
-function filtrarCartas() {
-  const texto = document.getElementById('buscador').value.toLowerCase();
+function _filtrarCartasInterno(container) { // Acepta container
+  const texto = document.getElementById('buscador-original').value.toLowerCase();
   
   const filtradas = todasLasCartas.filter(carta => {
-    const coincideTexto = carta.value.toLowerCase().includes(texto) || 
-                         carta.suit.toLowerCase().includes(texto);
-    const coincidePalo = mazoActual === 'all' || carta.suit === mazoActual;
-    return coincideTexto && coincidePalo;
+    const valorNormalizado = carta.value.toLowerCase();
+    const paloNormalizado = carta.suit.toLowerCase();
+    const textoBusqueda = texto; // Ya está en minúsculas
+
+    // Lógica de búsqueda mejorada:
+    // "king hearts" buscará King of Hearts
+    // "ace" buscará todos los Ases
+    // "spades" buscará todas las Picas
+    const terminosBusqueda = textoBusqueda.split(' ').filter(t => t.length > 0);
+    let coincideTexto = true;
+    if (terminosBusqueda.length > 0) {
+        coincideTexto = terminosBusqueda.every(term => 
+            valorNormalizado.includes(term) || paloNormalizado.includes(term)
+        );
+    }
+                         
+    const coincidePaloSelect = mazoActual === 'all' || carta.suit === mazoActual;
+    return coincideTexto && coincidePaloSelect;
   });
   
-  mostrarCartas(filtradas);
+  _mostrarCartasInterno(filtradas, container); // Pasar container
 }
 
 
-function toggleFavorito(codigoCarta) {
-  const favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
+// Esta función SÍ necesita ser global si se llama desde onclick="" en el HTML generado
+// o si la refactorizamos para usar event listeners añadidos en _mostrarCartasInterno
+window.toggleFavorito = function(codigoCarta) {
+  let favoritos = JSON.parse(storage.getItem('favoritos')) || [];
   const carta = todasLasCartas.find(c => c.code === codigoCarta);
   
+  // Encuentra el botón específico para esta carta y su imagen de favorito
+  const cardElement = document.querySelector(`.card img[data-code="${codigoCarta}"]`);
+  const favButtonImg = cardElement ? cardElement.closest('.card').querySelector('.favorito img') : null;
+
   if (esFavorita(codigoCarta)) {
-    const nuevosFavoritos = favoritos.filter(c => c.code !== codigoCarta);
-    localStorage.setItem('favoritos', JSON.stringify(nuevosFavoritos));
+    favoritos = favoritos.filter(c => c.code !== codigoCarta);
+    storage.setItem('favoritos', JSON.stringify(favoritos));
     mostrarMensaje('Carta removida de favoritos');
+    if (favButtonImg) favButtonImg.src = `assets/img/iconos/favorito.png`; // Actualiza la imagen del botón
   } else {
-    favoritos.push(carta);
-    localStorage.setItem('favoritos', JSON.stringify(favoritos));
-    mostrarMensaje('Carta añadida a favoritos');
+    if (carta) { // Asegurarse que la carta existe en todasLasCartas
+      favoritos.push(carta);
+      storage.setItem('favoritos', JSON.stringify(favoritos));
+      mostrarMensaje('Carta añadida a favoritos');
+      if (favButtonImg) favButtonImg.src = `assets/img/iconos/favorito-lleno.png`; // Actualiza la imagen del botón
+    } else {
+      console.warn(`No se encontró la carta con código ${codigoCarta} para añadir a favoritos.`);
+    }
   }
   
-  // Actualizar visualización
-  const botones = document.querySelectorAll(`.favorito img[alt="Favorito"]`);
-  botones.forEach(boton => {
-    const cardCode = boton.closest('.card').querySelector('img').alt.split(' of ')[0];
-    boton.src = `img/iconos/${esFavorita(cardCode) ? 'favorito-lleno.png' : 'favorito.png'}`;
-  });
 }
 
 function mostrarMensaje(mensaje) {
+  // ... (código de mostrarMensaje sin cambios, pero asegúrate que las rutas de imágenes de favoritos sean correctas) ...
+  // Ejemplo: 'assets/img/iconos/favorito.png' si tus imágenes están en public/assets/img/iconos/
   const toast = document.createElement('div');
   toast.textContent = mensaje;
-  toast.style.position = 'fixed';
-  toast.style.bottom = '100px';
-  toast.style.left = '50%';
-  toast.style.transform = 'translateX(-50%)';
-  toast.style.backgroundColor = '#27ae60';
-  toast.style.color = 'white';
-  toast.style.padding = '10px 20px';
-  toast.style.borderRadius = '20px';
-  toast.style.zIndex = '1000';
-  toast.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+  toast.className = 'toast-message'; // Añade una clase para estilizarlo en CSS
   document.body.appendChild(toast);
   
   setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transition = 'opacity 0.5s';
+    toast.classList.add('fade-out');
     setTimeout(() => toast.remove(), 500);
   }, 2000);
 }
 
-window.mostrarInicio = mostrarInicio;
-window.toggleFavorito = toggleFavorito;
+export default mostrarContenidoOriginal;
+// Si la dejaste como mostrarInicio:
+// export default mostrarInicio;

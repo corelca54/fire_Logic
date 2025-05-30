@@ -1,7 +1,7 @@
 // src/componentes/home.js
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-// Si vas a mostrar el leaderboard aquí, importa las funciones necesarias:
-import { mostrarMejoresPuntajesGenerales } from '../firebase/leaderboardService.js'; // (Ejemplo de ruta)
+// IMPORTA la función desde el archivo correcto:
+import { mostrarMejoresPuntajesGenerales } from '../firebase/leaderboardService.js';
 
 function renderHomePage(appContainer) {
     const auth = getAuth();
@@ -16,7 +16,7 @@ function renderHomePage(appContainer) {
                     <!-- Los botones se añadirán dinámicamente -->
                 </div>
                 <div id="leaderboard-home-container" class="leaderboard-container" style="margin-top: 20px;">
-                    <!-- Aquí podrías cargar un leaderboard general si lo deseas -->
+                    <!-- El leaderboard se cargará aquí -->
                 </div>
             </div>
         </div>
@@ -34,31 +34,20 @@ function renderHomePage(appContainer) {
                 <button id="btn-ver-perfil" class="btn-accion-home">👤 Mi Perfil</button>
                 <button id="btn-logout-home" class="btn-accion-home">🚪 Cerrar Sesión</button>
             `;
-            document.getElementById('btn-logout-home').addEventListener('click', tuFuncionDeLogout);
-             document.getElementById('btn-ir-a-juegos').addEventListener('click', tuFuncionParaNavegarAJuegos);
-            document.getElementById('btn-ver-perfil').addEventListener('click', tuFuncionParaNavegarAPerfil);
-
+            // TODO: Añadir event listeners para los botones y conectar con funciones de navegación/acción
+            // document.getElementById('btn-logout-home').addEventListener('click', tuFuncionDeLogout);
         } else {
             userStatusDiv.innerHTML = `<p>¡Bienvenido! Inicia sesión para guardar tu progreso.</p>`;
             homeActionsDiv.innerHTML = `
                 <button id="btn-login-home" class="btn-accion-home">🔑 Iniciar Sesión / Registrarse</button>
             `;
-             document.getElementById('btn-login-home').addEventListener('click', tuFuncionParaNavegarALogin);
+            // TODO: Añadir event listeners para los botones y conectar con funciones de navegación/acción
         }
-        
-         if (document.getElementById('btn-ir-a-juegos') && window.navegarAJuegos) {
-            document.getElementById('btn-ir-a-juegos').addEventListener('click', window.navegarAJuegos);
-        }
-        // (Esto asume que tienes una función global 'navegarAJuegos' o similar)
     });
 
-    // Ejemplo de cómo podrías cargar el leaderboard aquí
-     if (typeof mostrarMejoresPuntajesGenerales === 'function') {
-    mostrarMejoresPuntajesGenerales('leaderboard-home-container');
-    } else {
-      console.warn('Función mostrarMejoresPuntajesGenerales no disponible para home.');
-     }
+    // LLAMA a la función importada para mostrar el leaderboard
+    const leaderboardDivId = 'leaderboard-home-container';
+    mostrarMejoresPuntajesGenerales(leaderboardDivId, 5); // Muestra los 5 mejores generales
 }
 
-// La exportación que tu main.js espera:
 export default renderHomePage;
