@@ -194,9 +194,35 @@ main {
 .filtros-mazos-container button#btn-reset-filtros-mazos { /* Ya usa .btn-accion-home y .btn-secundario */ }
 
 /* Contenedor de cartas (reutilizado de tu CSS original) */
-.card-container {
-  display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); /* Ajustado para más cartas */
-  gap:1rem; padding:1rem 0;
+.mis-mazos-header-y-filtros {
+  max-width: var(--max-ancho-contenido, 1100px); /* O el max-width que tenías para .mis-mazos-vista */
+  margin: 0 auto; /* Centrar este bloque */
+  padding: 1rem; /* Padding para el contenido del header y filtros */
+}
+
+/* ELIMINA o ajusta max-width de .mis-mazos-vista si todavía existe */
+/* .mis-mazos-vista {
+  /* max-width: 1200px; /* <--- ESTO LIMITARÍA AL .card-container si es hijo */
+/* } */
+
+
+/* Contenedor de cartas para que ocupe todo el ancho */
+/* Si el fondo de #app[data-pantalla="home"] es una imagen, este contenedor */
+/* podría necesitar un fondo propio para legibilidad de las cartas */
+.card-container-full-width {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* O el tamaño de carta que quieras */
+  gap: 1rem;
+  padding: 1rem; /* Padding alrededor del grid de cartas */
+  width: 100%;   /* Ocupa todo el ancho disponible */
+  /* background-color: rgba(255, 255, 255, 0.8); /* Fondo opcional si el de la página es complejo */
+  /* border-radius: var(--radio-borde-m); */
+  /* margin-top: 1rem; */
+}
+
+/* Los estilos de .card se mantienen */
+.card {
+  /* ... tus estilos ... */
 }
 .card { /* Estilos para las cartas individuales */
   background:white; border-radius:var(--radio-borde-m, 8px); overflow:hidden;

@@ -3,54 +3,29 @@ import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/fire
 import { getAuth } from "firebase/auth";
 
 const PREGUNTAS_CIENCIA = [
-    { id: "cie1", pregunta: "¿Planeta más cercano al Sol?", opciones: ["Venus", "Tierra", "Mercurio", "Marte"], respuestaCorrecta: "Mercurio", pista: "También el más pequeño.", dificultad: "facil" },
-    { id: "cie2", pregunta: "¿Gas para fotosíntesis?", opciones: ["Oxígeno", "Dióxido de Carbono", "Nitrógeno", "Hidrógeno"], respuestaCorrecta: "Dióxido de Carbono", pista: "Lo exhalamos.", dificultad: "facil" },
-    { id: "cie3", pregunta: "¿Fórmula del agua?", opciones: ["CO2", "O2", "H2O", "NaCl"], respuestaCorrecta: "H2O", pista: "Dos de un elemento, uno de otro.", dificultad: "media" },
-    { id: "cie4", pregunta: "¿Quién formuló la ley de la gravedad?", opciones: ["Einstein", "Galileo", "Newton", "Curie"], respuestaCorrecta: "Newton", pista: "Una manzana...", dificultad: "media" }
-    // ... (preguntas existentes) ...
-    {
-        id: "cie5",
-        tipo: "fisica",
-        pregunta: "¿Cuál es la unidad de medida de la energía?",
-        opciones: ["Newton", "Watt", "Joule", "Pascal"],
-        respuestaCorrecta: "Joule",
-        pista: "También se usa para medir el trabajo.",
-        dificultad: "media"
-    },
-    {
-        id: "cie6",
-        tipo: "quimica",
-        pregunta: "El componente principal del gas natural es el:",
-        opciones: ["Propano", "Etano", "Metano", "Butano"],
-        respuestaCorrecta: "Metano",
-        pista: "Su fórmula química es CH4.",
-        dificultad: "media"
-    },
-    {
-        id: "cie7",
-        tipo: "algebra_simple", // Integrando un poco de matemáticas
-        pregunta: "Si x + 5 = 12, ¿cuál es el valor de x?",
-        opciones: ["5", "6", "7", "8"],
-        respuestaCorrecta: "7",
-        pista: "Resta 5 de ambos lados de la ecuación.",
-        dificultad: "facil"
-    },
-    {
-        id: "cie8",
-        tipo: "biologia",
-        pregunta: "¿Cuál es el órgano más grande del cuerpo humano?",
-        opciones: ["Cerebro", "Hígado", "Piel", "Corazón"],
-        respuestaCorrecta: "Piel",
-        pista: "Nos cubre por completo.",
-        dificultad: "facil"
-    }
-    // ... ¡Añade muchas más! ...
+    // FÁCILES
+    { id: "cie1", categoria: "Ciencia", subcategoria: "Astronomía", pregunta: "¿Planeta más cercano al Sol?", opciones: ["Venus", "Tierra", "Mercurio", "Marte"], respuestaCorrecta: "Mercurio", pista: "También el más pequeño.", dificultad: "facil", explicacionOpcional: "Mercurio es el planeta más interno de nuestro sistema solar." },
+    { id: "cie2", categoria: "Ciencia", subcategoria: "Biología", pregunta: "¿Gas para fotosíntesis?", opciones: ["Oxígeno", "Dióxido de Carbono", "Nitrógeno", "Hidrógeno"], respuestaCorrecta: "Dióxido de Carbono", pista: "Lo exhalamos.", dificultad: "facil", explicacionOpcional: "Las plantas usan Dióxido de Carbono, agua y luz solar para crear su alimento." },
+    { id: "cie8", categoria: "Ciencia", subcategoria: "Biología", pregunta: "¿Cuál es el órgano más grande del cuerpo humano?", opciones: ["Cerebro", "Hígado", "Piel", "Corazón"], respuestaCorrecta: "Piel", pista: "Nos cubre por completo.", dificultad: "facil", explicacionOpcional: "La piel es el órgano más extenso y nos protege del exterior." },
+    { id: "mat_facil1", categoria: "Matemáticas", subcategoria: "Aritmética", pregunta: "¿Cuánto es 15 + 25?", opciones: ["30", "35", "40", "45"], respuestaCorrecta: "40", pista: "Suma las unidades y luego las decenas.", dificultad: "facil", explicacionOpcional: "15 + 25 = 40." },
+
+    // MEDIAS
+    { id: "cie3", categoria: "Ciencia", subcategoria: "Química", pregunta: "¿Fórmula del agua?", opciones: ["CO2", "O2", "H2O", "NaCl"], respuestaCorrecta: "H2O", pista: "Dos de un elemento, uno de otro.", dificultad: "media", explicacionOpcional: "H2O significa dos átomos de Hidrógeno y un átomo de Oxígeno." },
+    { id: "cie4", categoria: "Ciencia", subcategoria: "Física", pregunta: "¿Quién formuló la ley de la gravedad?", opciones: ["Einstein", "Galileo", "Newton", "Curie"], respuestaCorrecta: "Newton", pista: "Una manzana...", dificultad: "media", explicacionOpcional: "Sir Isaac Newton es famoso por sus leyes del movimiento y la gravitación universal." },
+    { id: "cie5", categoria: "Ciencia", subcategoria: "Física", pregunta: "¿Cuál es la unidad de medida de la energía en el SI?", opciones: ["Newton", "Watt", "Joule", "Pascal"], respuestaCorrecta: "Joule", pista: "También se usa para medir el trabajo.", dificultad: "media", explicacionOpcional: "El Joule (J) es la unidad del Sistema Internacional para energía, trabajo y calor." },
+    { id: "cie6", categoria: "Ciencia", subcategoria: "Química", pregunta: "El componente principal del gas natural es el:", opciones: ["Propano", "Etano", "Metano", "Butano"], respuestaCorrecta: "Metano", pista: "Su fórmula química es CH4.", dificultad: "media", explicacionOpcional: "El metano (CH4) es el hidrocarburo más simple y el principal componente del gas natural." },
+    { id: "mat_media1", categoria: "Matemáticas", subcategoria: "Álgebra", pregunta: "Si x + 5 = 12, ¿cuál es el valor de x?", opciones: ["5", "6", "7", "8"], respuestaCorrecta: "7", pista: "Resta 5 de ambos lados.", dificultad: "media", explicacionOpcional: "Para resolver x + 5 = 12, restamos 5 de ambos lados: x = 12 - 5, entonces x = 7." },
+
+    // DIFÍCILES (Ejemplos, necesitarías más)
+    { id: "fis_dificil1", categoria: "Ciencia", subcategoria: "Física", pregunta: "¿Cuál es la velocidad de la luz en el vacío (aproximadamente)?", opciones: ["300 km/s", "3,000 km/s", "30,000 km/s", "300,000 km/s"], respuestaCorrecta: "300,000 km/s", pista: "Es una constante fundamental en física.", dificultad: "dificil", explicacionOpcional: "La velocidad de la luz en el vacío es exactamente 299,792,458 metros por segundo, comúnmente redondeada a 300,000 km/s." },
+    { id: "qui_dificil1", categoria: "Ciencia", subcategoria: "Química", pregunta: "¿Qué elemento tiene el número atómico 1?", opciones: ["Helio", "Oxígeno", "Hidrógeno", "Carbono"], respuestaCorrecta: "Hidrógeno", pista: "Es el elemento más ligero y abundante.", dificultad: "dificil", explicacionOpcional: "El Hidrógeno (H) es el primer elemento de la tabla periódica, con un protón en su núcleo." }
 ];
 
 let preguntaActualCiencia = null;
-let puntajeCiencia = 0; // << DECLARADA AQUÍ A NIVEL DE MÓDULO
+let puntajeCiencia = 0;
 let preguntasCienciaUsadas = [];
 
+// ... (obtenerNuevaPreguntaCiencia como estaba) ...
 function obtenerNuevaPreguntaCiencia() {
     let preguntasDisponibles = PREGUNTAS_CIENCIA.filter(p => !preguntasCienciaUsadas.includes(p.id));
     if (preguntasDisponibles.length === 0) {
@@ -64,6 +39,7 @@ function obtenerNuevaPreguntaCiencia() {
     return nuevaPregunta;
 }
 
+
 function mostrarPreguntaCiencia(container, navigateTo) {
     preguntaActualCiencia = obtenerNuevaPreguntaCiencia();
     if (!preguntaActualCiencia) {
@@ -74,7 +50,7 @@ function mostrarPreguntaCiencia(container, navigateTo) {
     container.innerHTML = `
         <div class="juego-generico-container juego-ciencia-activo animate__animated animate__fadeIn">
             <header class="juego-header">
-                <h1>⚛️ Ciencia Divertida</h1>
+                <h1>⚛️ Ciencia Divertida ${preguntaActualCiencia.subcategoria ? `(${preguntaActualCiencia.subcategoria})` : ''}</h1>
                 <div class="puntaje-juego-ciencia">Puntos: <span id="puntaje-ciencia-actual">${puntajeCiencia}</span></div>
             </header>
             <div class="pregunta-ciencia-container">
@@ -112,13 +88,18 @@ function comprobarRespuestaCiencia(opcionSeleccionada, container, navigateTo) {
     botonesOpcion.forEach(btn => btn.disabled = true);
     if(pistaBtn) pistaBtn.style.display = 'none';
 
+    let explicacionHTML = "";
+    if (preguntaActualCiencia.explicacionOpcional) {
+        explicacionHTML = `<p class="explicacion-respuesta animate__animated animate__fadeInUp">${preguntaActualCiencia.explicacionOpcional}</p>`;
+    }
+
     if (opcionSeleccionada === preguntaActualCiencia.respuestaCorrecta) {
         puntajeCiencia += 10;
-        feedbackEl.innerHTML = `<p class="feedback-mensaje correcto animate__animated animate__tada">¡Correcto! <span class="puntos-ganados">(+10 pts)</span></p>`;
+        feedbackEl.innerHTML = `<p class="feedback-mensaje correcto animate__animated animate__tada">¡Correcto! <span class="puntos-ganados">(+10 pts)</span></p>${explicacionHTML}`;
         botonesOpcion.forEach(btn => { if (btn.dataset.opcion === preguntaActualCiencia.respuestaCorrecta) btn.classList.add('opcion-correcta'); });
     } else {
         puntajeCiencia -= (puntajeCiencia >= 5 ? 5 : puntajeCiencia);
-        feedbackEl.innerHTML = `<p class="feedback-mensaje incorrecto animate__animated animate__shakeX">Incorrecto. La correcta era "${preguntaActualCiencia.respuestaCorrecta}".</p>`;
+        feedbackEl.innerHTML = `<p class="feedback-mensaje incorrecto animate__animated animate__shakeX">Incorrecto. La correcta era "${preguntaActualCiencia.respuestaCorrecta}".</p>${explicacionHTML}`;
         botonesOpcion.forEach(btn => {
             if (btn.dataset.opcion === opcionSeleccionada) btn.classList.add('opcion-incorrecta');
             if (btn.dataset.opcion === preguntaActualCiencia.respuestaCorrecta) btn.classList.add('opcion-correcta-despues-fallo');
@@ -129,6 +110,7 @@ function comprobarRespuestaCiencia(opcionSeleccionada, container, navigateTo) {
     if(siguienteBtn) siguienteBtn.style.display = 'inline-block';
 }
 
+// ... (terminarJuegoCiencia, iniciarJuegoCiencia, mostrarPistaCiencia como estaban en la respuesta anterior, que ya incluyen guardado) ...
 async function terminarJuegoCiencia(container, navigateTo, finPorPreguntasAgotadas = false){
     const auth = getAuth(); const user = auth.currentUser; const db = getFirestore();
     let mensajeFinal = finPorPreguntasAgotadas ? "¡Completaste todas las preguntas!" : "Juego de Ciencia Terminado";
@@ -171,7 +153,7 @@ async function terminarJuegoCiencia(container, navigateTo, finPorPreguntasAgotad
 }
 
 export function iniciarJuegoCiencia(appContainer, navigateTo) {
-    puntajeCiencia = 0; // << CORRECCIÓN: Asegurar que se reinicie
+    puntajeCiencia = 0; 
     preguntasCienciaUsadas = [];
     mostrarPreguntaCiencia(appContainer, navigateTo);
 }
