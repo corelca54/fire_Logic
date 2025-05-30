@@ -101,10 +101,6 @@ function filtrarCartas() {
   mostrarCartas(filtradas);
 }
 
-function esFavorita(codigoCarta) {
-  const favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
-  return favoritos.some(carta => carta.code === codigoCarta);
-}
 
 function toggleFavorito(codigoCarta) {
   const favoritos = JSON.parse(localStorage.getItem('favoritos')) || [];
